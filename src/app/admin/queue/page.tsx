@@ -84,7 +84,7 @@ export default async function AdminQueue() {
                       className="btn btn-success"
                       style={{ fontSize: '0.8rem', padding: '0.3rem 0.8rem' }}
                       onClick={async () => {
-                        await fetch('/api/approve', {
+                        await fetch('/api/editor/workflows', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({ postId: draft.databaseId, action: 'publish' }),
@@ -97,7 +97,7 @@ export default async function AdminQueue() {
                       className="btn btn-danger"
                       style={{ fontSize: '0.8rem', padding: '0.3rem 0.8rem' }}
                       onClick={async () => {
-                        await fetch('/api/approve', {
+                        await fetch('/api/editor/workflows', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({ postId: draft.databaseId, action: 'trash' }),
@@ -105,6 +105,19 @@ export default async function AdminQueue() {
                       }}
                     >
                       Reject
+                    </button>
+                    <button
+                      className="btn btn-outline"
+                      style={{ fontSize: '0.8rem', padding: '0.3rem 0.8rem' }}
+                      onClick={async () => {
+                        await fetch('/api/editor/send-to-ai', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ postId: draft.databaseId, actions: ['summarize', 'suggest_headlines'] }),
+                        });
+                      }}
+                    >
+                      AI Assist
                     </button>
                   </td>
                 </tr>

@@ -1,6 +1,6 @@
 <?php
 /**
- * MCP Server configuration for AusRealNews.
+ * MCP Server configuration for Aus Real Estate News.
  *
  * Configures the MCP Adapter to create a dedicated server
  * with HTTP transport, exposing our custom abilities.
@@ -9,25 +9,19 @@ class AusRealNews_MCP_ServerConfig {
 
     /**
      * Configure the MCP server on mcp_adapter_init hook.
-     *
-     * This method is called after the MCP Adapter singleton is initialized.
-     * It creates a named server, registers abilities as tools, and sets up HTTP transport.
      */
     public static function configure_server(): void {
         $adapter = \WP\MCP\Core\McpAdapter::instance();
 
-        // Create a named MCP server for the real estate news platform
-        $server = $adapter->create_server('ausrealnews-mcp', [
-            'label'       => 'AusRealNews MCP Server',
+        $server = $adapter->create_server('ausrealestate-news', [
+            'label'       => 'Aus Real Estate News MCP Server',
             'description' => 'MCP server for Australian real estate news content management.',
             'transport'   => 'http',
             'transport_permission_callback' => function ($request) {
-                // Validate API key from header
                 $api_key = $request->get_header('X-MCP-API-Key');
                 $valid_key = get_option('ausrealnews_mcp_api_key');
 
                 if (empty($valid_key)) {
-                    // If no key configured, default to WordPress auth
                     return current_user_can('read');
                 }
 
@@ -50,6 +44,10 @@ class AusRealNews_MCP_ServerConfig {
             'ausrealnews/list-agents',
             'ausrealnews/get-agency',
             'ausrealnews/list-market-reports',
+            'ausrealnews/get-editorial-queue',
+            'ausrealnews/summarize-article',
+            'ausrealnews/suggest-headlines',
+            'ausrealnews/get-agent-articles',
         ];
 
         foreach ($abilities as $ability_name) {
@@ -59,12 +57,10 @@ class AusRealNews_MCP_ServerConfig {
             }
         }
 
-        // Enable validation in development
         if (defined('WP_DEBUG') && WP_DEBUG) {
             add_filter('mcp_adapter_validation_enabled', '__return_true');
         }
 
-        // Enable observability logging
         if (defined('WP_DEBUG') && WP_DEBUG) {
             add_filter('mcp_adapter_observability_handler', function () {
                 return new \WP\MCP\Infrastructure\Observability\ErrorLogMcpObservabilityHandler();

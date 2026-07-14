@@ -14,7 +14,7 @@ async function getLatestPosts() {
   try {
     const { data } = await apolloClient.query({
       query: GET_POSTS,
-      variables: { first: 9 },
+      variables: { first: 12 },
     });
     return data.posts.nodes as Post[];
   } catch {
@@ -47,24 +47,30 @@ export default async function HomePage() {
 
   return (
     <>
-      <section style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Latest News</h1>
-        <p style={{ color: 'var(--color-text-muted)' }}>
-          Australian real estate intelligence — market data, suburb guides, and policy analysis.
-        </p>
+      <section className="hero">
+        <div className="container">
+          <h1>Australian Real Estate News</h1>
+          <p>
+            Market intelligence, suburb guides, and policy analysis for the Australian property market.
+          </p>
+        </div>
       </section>
 
       {reports.length > 0 && (
-        <section style={{ marginBottom: '2.5rem' }}>
-          <h2 style={{ fontSize: '1.3rem', marginBottom: '1rem' }}>Featured Market Reports</h2>
-          <div className="post-grid">
+        <section style={{ marginBottom: '3rem' }}>
+          <div className="section-header">
+            <h2>Featured Market Reports</h2>
+            <Link href="/category/market">View All</Link>
+          </div>
+          <div className="post-grid post-grid-featured">
             {reports.map((report) => (
               <Link key={report.id} href={`/market-report/${report.slug}`} className="post-card">
                 {report.featuredImage?.node && (
                   <img src={report.featuredImage.node.sourceUrl} alt={report.featuredImage.node.altText} />
                 )}
                 <div className="post-card-body">
-                  <h3>{report.title}</h3>
+                  <span className="badge badge-market">Market Report</span>
+                  <h3 style={{ marginTop: '0.5rem' }}>{report.title}</h3>
                   <div className="meta">{formatDate(report.date)}</div>
                 </div>
               </Link>
@@ -75,7 +81,9 @@ export default async function HomePage() {
 
       {posts.length > 0 ? (
         <section>
-          <h2 style={{ fontSize: '1.3rem', marginBottom: '1rem' }}>Recent Articles</h2>
+          <div className="section-header">
+            <h2>Latest Articles</h2>
+          </div>
           <div className="post-grid">
             {posts.map((post) => (
               <Link key={post.id} href={`/articles/${post.slug}`} className="post-card">
@@ -83,22 +91,25 @@ export default async function HomePage() {
                   <img src={post.featuredImage.node.sourceUrl} alt={post.featuredImage.node.altText} />
                 )}
                 <div className="post-card-body">
-                  <h3>{post.title}</h3>
-                  <div className="meta">{formatDate(post.date)}</div>
-                  <div style={{ marginTop: '0.5rem' }}>
+                  <div style={{ marginBottom: '0.5rem' }}>
                     {post.categories.nodes.map((cat) => (
-                      <span key={cat.id} className="badge" style={{ marginRight: '0.25rem' }}>
+                      <span key={cat.id} className="badge badge-category" style={{ marginRight: '0.25rem' }}>
                         {cat.name}
                       </span>
                     ))}
                   </div>
+                  <h3>{post.title}</h3>
+                  <div className="meta">{formatDate(post.date)}</div>
                 </div>
               </Link>
             ))}
           </div>
         </section>
       ) : (
-        <p>No articles published yet.</p>
+        <div className="empty-state">
+          <h2>No articles published yet</h2>
+          <p>Content will appear here once articles are published in the CMS.</p>
+        </div>
       )}
     </>
   );

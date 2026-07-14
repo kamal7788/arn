@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: AusRealNews MCP Server
+ * Plugin Name: Aus Real Estate News MCP Server
  * Description: Configures the WordPress MCP Adapter to expose real estate content as MCP tools for AI agents.
  * Version: 1.0.0
  * Requires PHP: 8.0

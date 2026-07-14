@@ -29,15 +29,16 @@ Set these in the Hostinger Node.js panel or via `.env`:
 ```bash
 NODE_ENV=production
 PORT=3000
-NEXT_PUBLIC_GRAPHQL_ENDPOINT=https://yourdomain.com.au/graphql
-NEXT_PUBLIC_SITE_URL=https://yourdomain.com.au
-WP_REST_BASE=https://yourdomain.com.au/wp-json
-N8N_WEBHOOK_BASE=https://your-n8n.com/webhook
+NEXT_PUBLIC_GRAPHQL_ENDPOINT=https://cms.ausrealestatenews.com.au/graphql
+NEXT_PUBLIC_SITE_URL=https://stg.ausrealestatenews.com.au
+WP_REST_BASE=https://cms.ausrealestatenews.com.au/wp-json
+N8N_WEBHOOK_BASE=https://automation.ausrealestatenews.com.au/webhook
 REVALIDATION_SECRET=<generate-a-strong-random-string>
-MCP_SERVER_URL=https://yourdomain.com.au/wp-json/mcp/v1
-MCP_SERVER_ID=com.ausrealnews.mcp
+MCP_SERVER_URL=https://cms.ausrealestatenews.com.au/mcp-server/
+MCP_SERVER_ID=ausrealestate-news
 MCP_API_KEY=<from-wp-admin>
 WP_APP_PASSWORD=<wordpress-application-password>
+NEXTAUTH_URL=https://stg.ausrealestatenews.com.au
 ```
 
 ## 2. Deploy the Next.js App
@@ -114,13 +115,13 @@ wp-content/plugins/
 
 ### Activate Plugins
 
-1. Activate **AusRealNews Content Model** first
-2. Activate **AusRealNews MCP Server** second
+1. Activate **Aus Real Estate News Content Model** first
+2. Activate **Aus Real Estate News MCP Server** second
 3. Go to WPGraphQL settings and ensure custom post types show in GraphQL
 
 ### Generate MCP API Key
 
-In WordPress admin, go to Tools > AusRealNews MCP Settings (or run via WP-CLI):
+In WordPress admin, go to Tools > Aus Real Estate News MCP Settings (or run via WP-CLI):
 
 ```bash
 wp eval 'echo AusRealNews_MCP_ServerConfig::generate_api_key();'
@@ -133,7 +134,7 @@ Copy the output key and store it securely.
 Test the MCP endpoint:
 
 ```bash
-curl -X POST https://yourdomain.com.au/wp-json/mcp/v1/ausrealnews-mcp \
+curl -X POST https://cms.ausrealestatenews.com.au/mcp-server/ \
   -H "Content-Type: application/json" \
   -H "X-MCP-API-Key: YOUR_KEY" \
   -d '{
@@ -154,8 +155,9 @@ You should receive a JSON-RPC response with server info and capabilities.
 
 In your n8n instance, create webhooks:
 
-1. **`/webhook/agent-topic`** — Receives agent topic submissions
-2. **`/webhook/editorial-approve`** — Receives approval/rejection actions
+1. **`/webhook/agent-vetting`** — Receives agent applications
+2. **`/webhook/payment-webhook`** — Receives payment provider webhooks
+3. **`/webhook/editor-ai-assist`** — Receives editorial AI assistance requests
 
 Set the `N8N_WEBHOOK_BASE` environment variable to your n8n webhook base URL.
 
@@ -164,7 +166,7 @@ Set the `N8N_WEBHOOK_BASE` environment variable to your n8n webhook base URL.
 After WordPress publishes content, trigger revalidation:
 
 ```bash
-curl -X POST https://yourdomain.com.au/api/revalidate \
+curl -X POST https://stg.ausrealestatenews.com.au/api/revalidate \
   -H "Content-Type: application/json" \
   -H "x-revalidation-secret: YOUR_SECRET" \
   -d '{"slug": "article-slug", "type": "post"}'
@@ -174,11 +176,11 @@ Or use the n8n workflow to call this endpoint automatically on publish.
 
 ## 7. SSL and Domain
 
-- Ensure SSL is active on both WordPress and Node.js apps
+- Ensure SSL is active on both WordPress and Next.js apps
 - If using a single domain with WordPress and Next.js:
   - WordPress at root or `/wp`
   - Next.js at root with WordPress proxied, OR
-  - Use a subdomain for WordPress (e.g., `cms.yourdomain.com.au`)
+  - Use a subdomain for WordPress (e.g., `cms.ausrealestatenews.com.au`)
 
 ## 8. Performance Notes
 

@@ -1,4 +1,4 @@
-# AusRealNews — Architecture Overview
+# Aus Real Estate News — Architecture Overview
 
 ## System Architecture
 
@@ -71,13 +71,13 @@
 - `city`/`suburb` are non-hierarchical for flexibility.
 - `asset_class` is hierarchical for future grouping (e.g., Residential > House).
 
-**Agent model**: WordPress users with `agent_author` role + ACF user meta
+**Agent model**: WordPress users with `agent_contributor` role + ACF user meta
 - Agents are users (not CPTs) because they need login access to the dashboard.
 - ACF user fields store profile data (headline, bio, service area, agency link).
 
 ### 2. MCP Adapter
 
-- **Server name**: `ausrealnews-mcp` — namespaced and descriptive.
+- **Server name**: `ausrealestate-news` — namespaced and descriptive.
 - **Transport**: HTTP (MCP 2025-11-25 compliant Streamable HTTP).
 - **Auth**: API key via `X-MCP-API-Key` header, with WordPress capability fallback.
 - **Abilities**: 8 tools registered via WordPress Abilities API with `mcp.public: true`.

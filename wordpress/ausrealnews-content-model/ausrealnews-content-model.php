@@ -1,5 +1,5 @@
 /**
- * WordPress Plugin: AusRealNews Content Model
+ * WordPress Plugin: Aus Real Estate News — Content Model
  *
  * Registers custom post types, taxonomies, and ACF fields
  * for the Australian real estate news platform.

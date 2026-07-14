@@ -1,15 +1,15 @@
 # MCP Server Configuration for OpenCode / Claude Desktop / AI Agent Clients
-#
-# This file shows how to connect an MCP client to the WordPress MCP server.
-# Copy the relevant section into your MCP client configuration file.
+
+This file shows how to connect an MCP client to the WordPress MCP server.
+Copy the relevant section into your MCP client configuration file.
 
 ## For Claude Desktop (claude_desktop_config.json)
 
 ```json
 {
   "mcpServers": {
-    "ausrealnews": {
-      "url": "https://yourdomain.com.au/wp-json/mcp/v1/ausrealnews-mcp",
+    "ausrealestate-news": {
+      "url": "https://cms.ausrealestatenews.com.au/mcp-server/",
       "transport": "http",
       "headers": {
         "X-MCP-API-Key": "YOUR_MCP_API_KEY_HERE"
@@ -24,9 +24,9 @@
 ```json
 {
   "mcpServers": {
-    "ausrealnews": {
+    "ausrealestate-news": {
       "command": null,
-      "url": "https://yourdomain.com.au/wp-json/mcp/v1/ausrealnews-mcp",
+      "url": "https://cms.ausrealestatenews.com.au/mcp-server/",
       "transport": "streamable-http",
       "headers": {
         "X-MCP-API-Key": "YOUR_MCP_API_KEY_HERE"
@@ -40,6 +40,8 @@
 
 After connecting, you can discover tools via `tools/list` or use these directly:
 
+### Content Management
+
 | Tool Name | Description |
 |-----------|-------------|
 | `ausrealnews-list-posts` | List posts by type with taxonomy filters |
@@ -49,7 +51,16 @@ After connecting, you can discover tools via `tools/list` or use these directly:
 | `ausrealnews-list-taxonomies` | List taxonomy terms (states, cities, etc.) |
 | `ausrealnews-list-agents` | List agent profiles |
 | `ausrealnews-get-agency` | Get agency profile by ID or slug |
-| `ausrealnews-list-market-reports` | List market reports with key metrics |
+| `ausrealnews/list-market-reports` | List market reports with key metrics |
+
+### Editorial Assistance
+
+| Tool Name | Description | Permissions |
+|-----------|-------------|-------------|
+| `ausrealnews/get-editorial-queue` | Get draft/pending posts for review | editors/admins |
+| `ausrealnews/summarize-article` | Generate article summary with key facts | editors/admins |
+| `ausrealnews/suggest-headlines` | Generate headline suggestions (formal/casual/seo) | editors/admins |
+| `ausrealnews/get-agent-articles` | List articles by a specific agent | editors/admins |
 
 ## Example AI Agent Prompts
 
@@ -59,7 +70,9 @@ Once connected, you can ask the AI agent:
 - "List all draft articles for the NSW region"
 - "Get the agency profile for Ray White Melbourne"
 - "Update the risk level on post #1234 to High"
-- "List all suburbs in Queensland with active articles"
+- "Get the editorial queue and summarize post #5678"
+- "Suggest 5 SEO-heavy headlines for post #9012"
+- "List all articles by agent #42"
 
 ## Authentication
 
@@ -67,7 +80,7 @@ The MCP server uses API key authentication via the `X-MCP-API-Key` header.
 To generate a key:
 
 1. Log in to WordPress admin
-2. Go to Tools > AusRealNews MCP Settings
+2. Go to Tools > Aus Real Estate News MCP Settings
 3. Click "Generate API Key"
 4. Copy the key and add it to your MCP client configuration
 

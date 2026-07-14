@@ -306,3 +306,53 @@ export const GET_POSTS_BY_CATEGORY = gql`
   }
   ${POST_FIELDS}
 `;
+
+export const GET_POSTS_BY_SUBURB = gql`
+  query GetPostsBySuburb($suburbSlug: String!, $first: Int = 20) {
+    posts(
+      first: $first
+      where: { taxQuery: { taxArray: [{ taxonomy: SUBURB, terms: [$suburbSlug], field: SLUG, operator: IN }] } }
+    ) {
+      nodes {
+        ...PostFields
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+  ${POST_FIELDS}
+`;
+
+export const GET_AGENCY_BY_SLUG = gql`
+  query GetAgencyBySlug($slug: ID!) {
+    agency(id: $slug, idType: SLUG) {
+      id
+      databaseId
+      name
+      slug
+      content
+      description: acf(key: "description")
+      website: acf(key: "website")
+      socialLinks: acf(key: "socialLinks") {
+        facebook
+        instagram
+        linkedin
+      }
+    }
+  }
+`;
+
+export const GET_AGENCIES = gql`
+  query GetAgencies($first: Int = 50) {
+    agencies(first: $first) {
+      nodes {
+        id
+        databaseId
+        name
+        slug
+      }
+    }
+  }
+`;

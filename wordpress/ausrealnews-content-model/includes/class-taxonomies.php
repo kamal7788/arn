@@ -1,14 +1,25 @@
 <?php
 /**
- * Custom Taxonomies for AusRealNews.
+ * Custom Taxonomies for Aus Real Estate News.
  */
 class AusRealNews_Taxonomies {
 
     public static function register(): void {
+        self::register_post_tag();
         self::register_state();
         self::register_city();
         self::register_suburb();
         self::register_asset_class();
+    }
+
+    /**
+     * Register post_tag for all content types.
+     */
+    private static function register_post_tag(): void {
+        // post_tag is native to WordPress, but we ensure it's attached to our CPTs
+        register_taxonomy_for_object_type('post_tag', 'market_report');
+        register_taxonomy_for_object_type('post_tag', 'suburb_guide');
+        register_taxonomy_for_object_type('post_tag', 'policy_update');
     }
 
     private static function register_state(): void {

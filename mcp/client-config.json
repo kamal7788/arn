@@ -1,7 +1,7 @@
 {
   "mcpServers": {
-    "ausrealnews": {
-      "url": "https://yourdomain.com.au/wp-json/mcp/v1/ausrealnews-mcp",
+    "ausrealestate-news": {
+      "url": "https://cms.ausrealestatenews.com.au/mcp-server/",
       "transport": "http",
       "headers": {
         "X-MCP-API-Key": "YOUR_MCP_API_KEY_HERE"

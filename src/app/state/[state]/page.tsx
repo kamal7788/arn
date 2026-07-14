@@ -2,8 +2,8 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { apolloClient } from '@/lib/apollo-client';
-import { GET_POSTS_BY_STATE, GET_STATES } from '@/lib/graphql/queries';
-import type { Post } from '@/lib/types';
+import { GET_POSTS_BY_STATE, GET_STATES, GET_SUBURBS } from '@/lib/graphql/queries';
+import type { Post, TaxonomyTerm } from '@/lib/types';
 
 type Props = { params: Promise<{ state: string; suburb?: string }> };
 
@@ -49,21 +49,44 @@ async function getAllStates() {
   }
 }
 
+async function getStateSuburbs(stateSlug: string) {
+  try {
+    const { data } = await apolloClient.query({
+      query: GET_SUBURBS,
+      variables: { first: 100, where: { taxQuery: { taxArray: [{ taxonomy: 'STATE', terms: [stateSlug], field: 'SLUG', operator: 'IN' }] } } },
+      fetchPolicy: 'no-cache',
+    });
+    return data.suburbs.nodes as TaxonomyTerm[];
+  } catch {
+    return [];
+  }
+}
+
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 export default async function StatePage({ params }: Props) {
-  const { state } = await params;
-  const [posts, states] = await Promise.all([getStatePosts(state), getAllStates()]);
+  const { state, suburb } = await params;
+  const [posts, states, suburbs] = await Promise.all([
+    getStatePosts(state),
+    getAllStates(),
+    getStateSuburbs(state),
+  ]);
   const stateName = STATE_NAMES[state];
   if (!stateName) notFound();
+
+  const pageTitle = suburb
+    ? `${suburb.charAt(0).toUpperCase() + suburb.slice(1)}, ${stateName}`
+    : stateName;
 
   return (
     <>
       <div style={{ marginBottom: '2rem' }}>
-        <p style={{ color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>State</p>
-        <h1 style={{ fontSize: '2rem' }}>{stateName}</h1>
+        <p style={{ color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
+          {suburb ? `${stateName} / Suburb` : 'State'}
+        </p>
+        <h1 style={{ fontSize: '2rem' }}>{pageTitle}</h1>
       </div>
 
       <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -78,6 +101,28 @@ export default async function StatePage({ params }: Props) {
           </Link>
         ))}
       </div>
+
+      {suburbs.length > 0 && (
+        <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <Link
+            href={`/state/${state}`}
+            className="badge"
+            style={!suburb ? { background: 'var(--color-primary)', color: 'white' } : {}}
+          >
+            All Suburbs
+          </Link>
+          {suburbs.map((s) => (
+            <Link
+              key={s.id}
+              href={`/state/${state}/${s.slug}`}
+              className="badge"
+              style={s.slug === suburb ? { background: 'var(--color-primary)', color: 'white' } : {}}
+            >
+              {s.name}
+            </Link>
+          ))}
+        </div>
+      )}
 
       {posts.length > 0 ? (
         <div className="post-grid">
@@ -99,7 +144,7 @@ export default async function StatePage({ params }: Props) {
           ))}
         </div>
       ) : (
-        <p>No articles for this state yet.</p>
+        <p>No articles for this location yet.</p>
       )}
     </>
   );

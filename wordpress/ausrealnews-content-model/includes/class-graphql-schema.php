@@ -1,6 +1,6 @@
 <?php
 /**
- * WPGraphQL schema extensions for AusRealNews.
+ * WPGraphQL schema extensions for Aus Real Estate News.
  *
  * Exposes ACF fields and custom post types via GraphQL.
  * Requires WPGraphQL and WPGraphQL for ACF plugins.

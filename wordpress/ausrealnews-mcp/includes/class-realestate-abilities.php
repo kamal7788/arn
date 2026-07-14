@@ -23,6 +23,10 @@ class AusRealNews_RealEstateAbilities {
         self::register_list_agents();
         self::register_get_agency();
         self::register_list_market_reports();
+        self::register_get_editorial_queue();
+        self::register_summarize_article();
+        self::register_suggest_headlines();
+        self::register_get_agent_articles();
     }
 
     /**
@@ -457,7 +461,7 @@ class AusRealNews_RealEstateAbilities {
     }
 
     /**
-     * List agent profiles (users with agent_author role).
+     * List agent profiles (users with agent_contributor role).
      */
     private static function register_list_agents(): void {
         wp_register_ability('ausrealnews/list-agents', [
@@ -473,7 +477,7 @@ class AusRealNews_RealEstateAbilities {
             ],
             'execute_callback' => function ($input) {
                 $args = [
-                    'role'    => 'agent_author',
+                    'role'    => 'agent_contributor',
                     'number'  => $input['per_page'] ?? 20,
                     'offset'  => (($input['page'] ?? 1) - 1) * ($input['per_page'] ?? 20),
                 ];
@@ -617,6 +621,243 @@ class AusRealNews_RealEstateAbilities {
             },
             'permission_callback' => function () {
                 return current_user_can('read');
+            },
+            'meta' => [
+                'annotations' => ['readonly' => true, 'idempotent' => true],
+                'mcp'         => ['public' => true, 'type' => 'tool'],
+            ],
+        ]);
+    }
+
+    /**
+     * Get editorial queue — draft/pending posts for review.
+     */
+    private static function register_get_editorial_queue(): void {
+        wp_register_ability('ausrealnews/get-editorial-queue', [
+            'label'       => 'Get Editorial Queue',
+            'description' => 'Retrieve draft and pending posts for editorial review.',
+            'category'    => 'ausrealnews',
+            'input_schema' => [
+                'type'       => 'object',
+                'properties' => [
+                    'status'  => [
+                        'type'        => 'string',
+                        'description' => 'Post status filter',
+                        'enum'        => ['draft', 'pending', 'future', 'private'],
+                        'default'     => 'draft',
+                    ],
+                    'state'   => ['type' => 'string', 'description' => 'State slug filter'],
+                    'agent_id'=> ['type' => 'integer', 'description' => 'Agent user ID filter'],
+                    'per_page'=> ['type' => 'integer', 'default' => 20],
+                    'page'    => ['type' => 'integer', 'default' => 1],
+                ],
+            ],
+            'execute_callback' => function ($input) {
+                $args = [
+                    'post_type'      => ['post', 'market_report', 'suburb_guide', 'policy_update'],
+                    'post_status'    => $input['status'] ?? 'draft',
+                    'posts_per_page' => $input['per_page'] ?? 20,
+                    'paged'          => $input['page'] ?? 1,
+                    'orderby'        => 'date',
+                    'order'          => 'DESC',
+                ];
+
+                if (!empty($input['agent_id'])) {
+                    $args['author'] = $input['agent_id'];
+                }
+
+                if (!empty($input['state'])) {
+                    $args['tax_query'] = [[
+                        'taxonomy' => 'state',
+                        'field'    => 'slug',
+                        'terms'    => $input['state'],
+                    ]];
+                }
+
+                $query = new WP_Query($args);
+                $posts = [];
+
+                foreach ($query->posts as $post) {
+                    $posts[] = [
+                        'postId'         => $post->ID,
+                        'title'          => $post->post_title,
+                        'slug'           => $post->post_name,
+                        'status'         => $post->post_status,
+                        'type'           => $post->post_type,
+                        'agentId'        => (int) $post->post_author,
+                        'agentName'      => get_the_author_meta('display_name', $post->post_author),
+                        'createdAt'      => $post->post_date,
+                        'modifiedAt'     => $post->post_modified,
+                        'riskLevel'      => get_field('risk_level', $post->ID) ?: 'Low',
+                        'isAiGenerated'  => (bool) get_field('is_ai_generated', $post->ID),
+                        'aiPipelineId'   => get_field('ai_pipeline_id', $post->ID),
+                    ];
+                }
+
+                return [
+                    'drafts' => $posts,
+                    'total'  => $query->found_posts,
+                    'pages'  => $query->max_num_pages,
+                ];
+            },
+            'permission_callback' => function () {
+                return current_user_can('edit_others_posts');
+            },
+            'meta' => [
+                'annotations' => ['readonly' => true, 'idempotent' => true],
+                'mcp'         => ['public' => true, 'type' => 'tool'],
+            ],
+        ]);
+    }
+
+    /**
+     * Summarize an article using AI.
+     */
+    private static function register_summarize_article(): void {
+        wp_register_ability('ausrealnews/summarize-article', [
+            'label'       => 'Summarize Article',
+            'description' => 'Generate a summary with key facts from an article.',
+            'category'    => 'ausrealnews',
+            'input_schema' => [
+                'type'       => 'object',
+                'properties' => [
+                    'post_id' => ['type' => 'integer', 'description' => 'WordPress post ID'],
+                ],
+                'required' => ['post_id'],
+            ],
+            'execute_callback' => function ($input) {
+                $post = get_post($input['post_id']);
+                if (!$post) {
+                    return ['error' => 'Post not found'];
+                }
+
+                // Strip HTML and truncate for LLM processing
+                $content = wp_strip_all_tags($post->post_content);
+                $content = wp_trim_words($content, 500);
+
+                return [
+                    'postId'  => $post->ID,
+                    'title'   => $post->post_title,
+                    'content' => $content,
+                    'instruction' => 'Summarize this article in 2-3 paragraphs with bullet points of key facts.',
+                ];
+            },
+            'permission_callback' => function () {
+                return current_user_can('edit_others_posts');
+            },
+            'meta' => [
+                'annotations' => ['readonly' => true, 'idempotent' => true, 'openWorldHint' => true],
+                'mcp'         => ['public' => true, 'type' => 'tool'],
+            ],
+        ]);
+    }
+
+    /**
+     * Suggest headlines for an article.
+     */
+    private static function register_suggest_headlines(): void {
+        wp_register_ability('ausrealnews/suggest-headlines', [
+            'label'       => 'Suggest Headlines',
+            'description' => 'Generate headline suggestions for an article.',
+            'category'    => 'ausrealnews',
+            'input_schema' => [
+                'type'       => 'object',
+                'properties' => [
+                    'post_id' => ['type' => 'integer', 'description' => 'WordPress post ID'],
+                    'style'   => [
+                        'type'        => 'string',
+                        'description' => 'Headline style',
+                        'enum'        => ['formal', 'casual', 'seo-heavy'],
+                        'default'     => 'formal',
+                    ],
+                ],
+                'required' => ['post_id'],
+            ],
+            'execute_callback' => function ($input) {
+                $post = get_post($input['post_id']);
+                if (!$post) {
+                    return ['error' => 'Post not found'];
+                }
+
+                $content = wp_strip_all_tags($post->post_content);
+                $content = wp_trim_words($content, 300);
+
+                return [
+                    'postId'   => $post->ID,
+                    'title'    => $post->post_title,
+                    'content'  => $content,
+                    'style'    => $input['style'] ?? 'formal',
+                    'instruction' => 'Generate 5 alternative headlines for this article.',
+                ];
+            },
+            'permission_callback' => function () {
+                return current_user_can('edit_others_posts');
+            },
+            'meta' => [
+                'annotations' => ['readonly' => true, 'idempotent' => true, 'openWorldHint' => true],
+                'mcp'         => ['public' => true, 'type' => 'tool'],
+            ],
+        ]);
+    }
+
+    /**
+     * Get articles by a specific agent.
+     */
+    private static function register_get_agent_articles(): void {
+        wp_register_ability('ausrealnews/get-agent-articles', [
+            'label'       => 'Get Agent Articles',
+            'description' => 'List articles submitted by a specific agent.',
+            'category'    => 'ausrealnews',
+            'input_schema' => [
+                'type'       => 'object',
+                'properties' => [
+                    'agent_id' => ['type' => 'integer', 'description' => 'Agent user ID'],
+                    'status'   => [
+                        'type'        => 'string',
+                        'description' => 'Post status filter',
+                        'enum'        => ['draft', 'pending', 'publish', 'any'],
+                        'default'     => 'any',
+                    ],
+                    'per_page' => ['type' => 'integer', 'default' => 20],
+                ],
+                'required' => ['agent_id'],
+            ],
+            'execute_callback' => function ($input) {
+                $args = [
+                    'author'         => $input['agent_id'],
+                    'post_type'      => ['post', 'market_report', 'suburb_guide', 'policy_update'],
+                    'posts_per_page' => $input['per_page'] ?? 20,
+                    'orderby'        => 'date',
+                    'order'          => 'DESC',
+                ];
+
+                if (($input['status'] ?? 'any') !== 'any') {
+                    $args['post_status'] = $input['status'];
+                }
+
+                $query = new WP_Query($args);
+                $posts = [];
+
+                foreach ($query->posts as $post) {
+                    $posts[] = [
+                        'id'        => $post->ID,
+                        'title'     => $post->post_title,
+                        'slug'      => $post->post_name,
+                        'status'    => $post->post_status,
+                        'type'      => $post->post_type,
+                        'date'      => $post->post_date,
+                        'modified'  => $post->post_modified,
+                        'permalink' => get_permalink($post),
+                    ];
+                }
+
+                return [
+                    'articles' => $posts,
+                    'total'    => $query->found_posts,
+                ];
+            },
+            'permission_callback' => function () {
+                return current_user_can('edit_others_posts');
             },
             'meta' => [
                 'annotations' => ['readonly' => true, 'idempotent' => true],

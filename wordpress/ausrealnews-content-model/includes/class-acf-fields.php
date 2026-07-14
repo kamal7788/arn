@@ -1,6 +1,6 @@
 <?php
 /**
- * ACF Field Group Registration for AusRealNews.
+ * ACF Field Group Registration for Aus Real Estate News.
  *
  * Requires the Advanced Custom Fields (ACF) Pro plugin.
  * Registers field groups for articles, agent profiles, and agency profiles.
@@ -215,7 +215,7 @@ class AusRealNews_ACF_Fields {
                 ],
             ],
             'location' => [
-                [['param' => 'user_role', 'operator' => '==', 'value' => 'agent_author']],
+                [['param' => 'user_role', 'operator' => '==', 'value' => 'agent_contributor']],
             ],
         ]);
     }
