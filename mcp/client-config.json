@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "ausrealnews": {
+      "url": "https://yourdomain.com.au/wp-json/mcp/v1/ausrealnews-mcp",
+      "transport": "http",
+      "headers": {
+        "X-MCP-API-Key": "YOUR_MCP_API_KEY_HERE"
+      },
+      "capabilities": {
+        "tools": {
+          "listChanged": true
+        },
+        "resources": {},
+        "prompts": {}
+      }
+    }
+  }
+}
