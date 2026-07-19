@@ -667,8 +667,421 @@ npm install && npm run build && npm start
 
 ---
 
-## 17. Related Documentation
+## 17. WordPress Backend CMS Setup Guide
+
+Complete step-by-step guide for setting up the WordPress backend on staging or production.
+
+### 17.1 Prerequisites
+
+| Requirement | Version | Notes |
+|-------------|---------|-------|
+| WordPress | 6.5+ | Latest stable |
+| PHP | 8.1+ | Required by ACF Pro and WPGraphQL |
+| MySQL | 8.0+ or MariaDB 10.4+ | |
+| HTTPS | Enabled | Required for MCP and GraphQL |
+
+### 17.2 Plugin Installation Order
+
+Install and activate plugins in this exact order:
+
+| Order | Plugin | Source | Purpose |
+|-------|--------|--------|---------|
+| 1 | **WPGraphQL** | WordPress.org or [GitHub releases](https://github.com/wp-graphql/wp-graphql/releases) | GraphQL endpoint at `/graphql` |
+| 2 | **WPGraphQL for ACF** | [GitHub](https://github.com/wp-graphql/wp-graphql-acf) | Exposes ACF fields via GraphQL |
+| 3 | **ACF Pro** | [Advanced Custom Fields Pro](https://www.advancedcustomfields.com/) | Custom fields for CPTs |
+| 4 | **Aus Real Estate News — Content Model** | `wordpress/ausrealnews-content-model/` (upload as zip or copy to `wp-content/plugins/`) | Registers 5 CPTs, 4 taxonomies, ACF fields, GraphQL schema, roles |
+| 5 | **WordPress MCP Adapter** | [GitHub](https://github.com/WordPress/mcp-adapter) | MCP server integration |
+| 6 | **Aus Real Estate News — MCP Server** | `wordpress/ausrealnews-mcp/` | Registers 12 MCP tools for AI agents |
+
+### 17.3 WPGraphQL Configuration
+
+After activating WPGraphQL:
+
+1. **Go to** `Settings → GraphQL` in WordPress admin
+2. **Enable** the GraphQL endpoint (default: `/graphql`)
+3. **Verify** the endpoint works:
+   ```
+   GET https://cms.ausrealestatenews.com.au/graphql?query={generalSettings{name,description,url}}
+   ```
+4. **Enable introspection** for development (disable in production):
+   ```
+   Settings → GraphQL → Enable Introspection: ON
+   ```
+
+#### Exposing Custom Post Types
+
+The content model plugin automatically sets `show_in_graphql => true` on all CPTs. Verify:
+
+1. Go to `GraphQL → GraphQL Explorer` in WordPress admin
+2. Run:
+   ```graphql
+   query {
+     posts(first: 1) { nodes { title } }
+     marketReports(first: 1) { nodes { title } }
+     suburbGuides(first: 1) { nodes { title } }
+     policyUpdates(first: 1) { nodes { title } }
+     agencies(first: 1) { nodes { title } }
+   }
+   ```
+3. All 5 types should return results (or empty arrays if no content yet)
+
+#### Exposing Taxonomies
+
+The content model plugin registers `state`, `city`, `suburb`, and `asset_class` taxonomies with `show_in_graphql => true`. Verify:
+
+```graphql
+query {
+  states(first: 8) { nodes { name slug } }
+  assetClasses(first: 5) { nodes { name slug } }
+}
+```
+
+### 17.4 ACF Pro Configuration
+
+After activating ACF Pro:
+
+1. **Go to** `ACF → Options` and enable `ACF Options Pages` if needed (not required for this project)
+2. **Verify field groups** are registered by the content model plugin:
+   - Go to `ACF → Field Groups`
+   - Should see: `Article Settings`, `Market Report Fields`, `Agent Profile`, `Agency Profile`
+3. **Verify ACF fields appear** in GraphQL:
+   ```graphql
+   query {
+     posts(first: 1) {
+       nodes {
+         title
+         sourceUrls
+         aiPipelineId
+         riskLevel
+         isAiGenerated
+       }
+     }
+   }
+   ```
+
+#### ACF Field Group Locations
+
+| Field Group | Location Rule | Post Types |
+|-------------|---------------|------------|
+| Article Settings | Post Type = post, suburb_guide, policy_update | post, suburb_guide, policy_update |
+| Market Report Fields | Post Type = market_report | market_report |
+| Agent Profile | User Role = agent_contributor | (user fields) |
+| Agency Profile | Post Type = agency | agency |
+
+### 17.5 Content Model Verification
+
+#### Verify Custom Post Types
+
+Go to `Settings → Writing` or check the admin menu for:
+
+- Posts (native)
+- Market Reports
+- Suburb Guides
+- Policy Updates
+- Agencies
+
+#### Verify Taxonomies
+
+Go to `Posts → Categories` (native) and check for:
+
+- **Categories:** Market, Policy, Development, Technology, Finance
+- **States:** NSW, VIC, QLD, WA, SA, TAS, ACT, NT
+- **Asset Classes:** House, Unit, Townhouse, Commercial, Land
+
+#### Verify User Roles
+
+Go to `Users → Roles` and check for:
+
+- Administrator
+- Editor
+- Author
+- Contributor
+- Subscriber
+- **editor_in_chief** (custom)
+- **agent_contributor** (custom)
+
+### 17.6 Category and Taxonomy Seeding
+
+Run the setup script to create all required categories and taxonomy terms:
+
+```bash
+# Option A: Via WP-CLI (SSH into WordPress host)
+wp eval-file wp-setup-nav.php
+
+# Option B: Add to functions.php temporarily
+# Add the contents of wordpress/wp-setup-nav.php to your theme's functions.php
+# Visit any page on the site
+# Remove the code from functions.php
+```
+
+The script creates:
+
+| Type | Terms Created |
+|------|---------------|
+| Categories | Market, Policy, Development, Technology, Finance |
+| States | NSW, VIC, QLD, WA, SA, TAS, ACT, NT |
+| Menu | Primary Navigation (with State dropdown) |
+
+### 17.7 Navigation Menu Setup
+
+The setup script (`wp-setup-nav.php`) creates the Primary Navigation menu with:
+
+```
+Market → /category/market
+Policy → /category/policy
+Development → /category/development
+State → /state
+  ├── NSW → /state/nsw
+  ├── VIC → /state/vic
+  ├── QLD → /state/qld
+  ├── WA → /state/wa
+  ├── SA → /state/sa
+  ├── TAS → /state/tas
+  ├── ACT → /state/act
+  └── NT → /state/nt
+Technology → /category/technology
+Finance → /category/finance
+```
+
+**Menu location:** Assigned to `primary` theme location.
+
+**To update the menu manually:**
+1. Go to `Appearance → Menus`
+2. Edit the "Primary Navigation" menu
+3. Add/remove/reorder items
+4. Ensure the State parent has child items for each state
+
+### 17.8 MCP Adapter Setup
+
+#### Install WordPress MCP Adapter
+
+1. Download from [GitHub](https://github.com/WordPress/mcp-adapter)
+2. Upload to `wp-content/plugins/wordpress-mcp-adapter`
+3. Activate in WordPress admin
+
+#### Install Aus Real Estate News MCP Plugin
+
+1. Copy `wordpress/ausrealnews-mcp/` to `wp-content/plugins/ausrealnews-mcp`
+2. Activate in WordPress admin
+
+#### Generate MCP API Key
+
+```bash
+wp eval 'echo AusRealNews_MCP_ServerConfig::generate_api_key();'
+```
+
+Save this key — it's used in the frontend `.env` file as `MCP_API_KEY`.
+
+#### MCP Server Configuration
+
+The MCP server is configured with:
+
+| Setting | Value |
+|---------|-------|
+| Transport | HTTP (Streamable HTTP) |
+| Endpoint | `/mcp-server/` |
+| Auth | API key via `X-MCP-API-Key` header |
+| Server ID | `ausrealestate-news` |
+
+#### Verify MCP Server
+
+Test the MCP endpoint:
+
+```bash
+curl -X POST https://cms.ausrealestatenews.com.au/mcp-server/ \
+  -H "Content-Type: application/json" \
+  -H "X-MCP-API-Key: YOUR_API_KEY" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
+```
+
+Expected response: JSON with server capabilities.
+
+### 17.9 GraphQL Testing
+
+#### Test Queries
+
+After all plugins are active, test these queries in the GraphQL Explorer (`/wp-admin/admin.php?page=graphql`):
+
+**Test all post types:**
+```graphql
+query {
+  posts(first: 5) { nodes { title slug date } }
+  marketReports(first: 5) { nodes { title slug date } }
+  suburbGuides(first: 5) { nodes { title slug date } }
+  policyUpdates(first: 5) { nodes { title slug date } }
+  agencies(first: 5) { nodes { title slug } }
+}
+```
+
+**Test taxonomies:**
+```graphql
+query {
+  categories(first: 10) { nodes { name slug count } }
+  states(first: 10) { nodes { name slug count } }
+  assetClasses(first: 10) { nodes { name slug count } }
+}
+```
+
+**Test ACF fields (after creating a test post):**
+```graphql
+query {
+  posts(first: 1) {
+    nodes {
+      title
+      sourceUrls
+      riskLevel
+      isAiGenerated
+    }
+  }
+}
+```
+
+**Test market report with key metrics:**
+```graphql
+query {
+  marketReports(first: 1) {
+    nodes {
+      title
+      keyMetrics {
+        medianPrice
+        yoyChange
+        vacancyRate
+        daysOnMarket
+      }
+    }
+  }
+}
+```
+
+### 17.10 CORS Configuration
+
+For the Next.js frontend to access WordPress GraphQL and REST APIs, configure CORS:
+
+#### Option A: WordPress Plugin (Recommended)
+
+Install a CORS plugin like **HTTP Headers** or **CORS Headers** and add:
+
+```
+Access-Control-Allow-Origin: https://stg.ausrealestatenews.com.au
+Access-Control-Allow-Methods: GET, POST, OPTIONS
+Access-Control-Allow-Headers: Content-Type, Authorization, X-MCP-API-Key
+Access-Control-Allow-Credentials: true
+```
+
+#### Option B: .htaccess (Apache)
+
+Add to WordPress root `.htaccess`:
+
+```apache
+<IfModule mod_headers.c>
+  SetEnvIf Origin "https://stg\.ausrealestatenews\.com\.au$" CORS_ORIGIN=$0
+  Header set Access-Control-Allow-Origin "%{CORS_ORIGIN}e" env=CORS_ORIGIN
+  Header set Access-Control-Allow-Methods "GET, POST, OPTIONS" env=CORS_ORIGIN
+  Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-MCP-API-Key" env=CORS_ORIGIN
+  Header set Access-Control-Allow-Credentials "true" env=CORS_ORIGIN
+</IfModule>
+```
+
+#### Option C: nginx (if applicable)
+
+```nginx
+location /graphql {
+  add_header Access-Control-Allow-Origin "https://stg.ausrealestatenews.com.au";
+  add_header Access-Control-Allow-Methods "GET, POST, OPTIONS";
+  add_header Access-Control-Allow-Headers "Content-Type, Authorization, X-MCP-API-Key";
+  add_header Access-Control-Allow-Credentials "true";
+}
+```
+
+### 17.11 Headless WordPress Settings
+
+Configure WordPress for headless operation:
+
+#### Permalink Settings
+
+Go to `Settings → Permalinks` and set:
+
+- **Common Settings:** Custom Structure → `/%postname%/`
+- This ensures clean URLs for GraphQL queries
+
+#### Disable Frontend (Optional)
+
+To redirect WordPress frontend to the Next.js app:
+
+1. Install **Safe Redirect Manager** or **Redirection** plugin
+2. Add redirect: `/*` → `https://stg.ausrealestatenews.com.au/$1` (301)
+3. Exclude `/wp-admin/*` and `/wp-login.php` from redirect
+
+#### Disable XML-RPC
+
+Add to `functions.php` or a security plugin:
+
+```php
+add_filter('xmlrpc_enabled', '__return_false');
+```
+
+#### Disable WordPress REST API for Unauthorized Users (Optional)
+
+For security, restrict REST API access:
+
+```php
+add_filter('rest_authentication_errors', function($result) {
+    if (!is_user_logged_in() && !isset($_SERVER['HTTP_X_MCP_API_KEY'])) {
+        return new WP_Error('rest_forbidden', 'Unauthorized', ['status' => 403]);
+    }
+    return $result;
+});
+```
+
+### 17.12 Environment Variables (Frontend)
+
+Update the frontend `.env` file with WordPress backend values:
+
+```env
+# WordPress GraphQL
+NEXT_PUBLIC_GRAPHQL_ENDPOINT=https://cms.ausrealestatenews.com.au/graphql
+
+# WordPress REST API
+WP_REST_BASE=https://cms.ausrealestatenews.com.au/wp-json
+
+# MCP Server
+MCP_SERVER_URL=https://cms.ausrealestatenews.com.au/mcp-server/
+MCP_SERVER_ID=ausrealestate-news
+MCP_API_KEY=your_generated_api_key_here
+
+# WordPress Application Password
+WP_APP_PASSWORD=your_application_password_here
+
+# Frontend
+NEXT_PUBLIC_SITE_URL=https://stg.ausrealestatenews.com.au
+```
+
+### 17.13 Verification Checklist
+
+After completing setup, verify each item:
+
+| # | Check | How to Verify |
+|---|-------|---------------|
+| 1 | WPGraphQL active | `Settings → GraphQL` page exists |
+| 2 | GraphQL endpoint works | `GET /graphql?query={generalSettings{name}}` returns JSON |
+| 3 | ACF Pro active | `ACF → Field Groups` shows 4 field groups |
+| 4 | Content Model plugin active | Admin menu shows Market Reports, Suburb Guides, Policy Updates, Agencies |
+| 5 | Taxonomies registered | `Posts → Categories` shows Market, Policy, Development, Technology, Finance; States show NSW, VIC, etc. |
+| 6 | User roles created | `Users → Roles` shows editor_in_chief, agent_contributor |
+| 7 | Categories seeded | Market, Policy, Development, Technology, Finance exist |
+| 8 | State terms seeded | NSW, VIC, QLD, WA, SA, TAS, ACT, NT exist |
+| 9 | Navigation menu created | `Appearance → Menus` shows Primary Navigation with correct structure |
+| 10 | MCP Adapter active | `/mcp-server/` endpoint responds |
+| 11 | MCP API key generated | Saved in frontend `.env` as `MCP_API_KEY` |
+| 12 | CORS configured | Frontend can fetch `/graphql` without CORS errors |
+| 13 | ACF fields in GraphQL | Query `posts { nodes { sourceUrls riskLevel } }` returns fields |
+| 14 | Market report metrics | Query `marketReports { nodes { keyMetrics { medianPrice } } }` returns data |
+
+---
+
+## 18. Related Documentation
 
 - `ARCHITECTURE.md` — Visual architecture and design decisions
 - `DEPLOYMENT.md` — Step-by-step Hostinger deployment guide
 - `mcp/README.md` — MCP client configuration and usage
+- `docs/NAVIGATION.md` — Menu structure and maintenance guide
