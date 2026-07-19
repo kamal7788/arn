@@ -1,13 +1,17 @@
 <?php
+<?php
 /**
  * Plugin Name: Aus Real Estate News MCP Server
+ * Plugin URI: https://ausrealestatenews.com.au
  * Description: Configures the WordPress MCP Adapter to expose real estate content as MCP tools for AI agents.
  * Version: 1.0.0
- * Requires PHP: 8.0
+ * Requires PHP: 8.1
  * Requires Plugins: mcp-adapter
- *
- * Install: Place in wp-content/plugins/ausrealnews-mcp/
- * Requires the official WordPress MCP Adapter plugin to be installed first.
+ * Author: Aus Real Estate News
+ * Author URI: https://ausrealestatenews.com.au
+ * License: GPL v2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain: ausrealnews
  */
 
 defined('ABSPATH') || exit;

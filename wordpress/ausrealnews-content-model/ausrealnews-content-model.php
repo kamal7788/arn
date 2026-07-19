@@ -1,11 +1,15 @@
+<?php
 /**
- * WordPress Plugin: Aus Real Estate News — Content Model
- *
- * Registers custom post types, taxonomies, and ACF fields
- * for the Australian real estate news platform.
- *
- * Install: Place in wp-content/plugins/ausrealnews-content-model/
- * Activate via WordPress admin.
+ * Plugin Name: Aus Real Estate News — Content Model
+ * Plugin URI: https://ausrealestatenews.com.au
+ * Description: Registers custom post types, taxonomies, ACF fields, and GraphQL schema for the Australian real estate news platform.
+ * Version: 1.0.0
+ * Requires PHP: 8.1
+ * Author: Aus Real Estate News
+ * Author URI: https://ausrealestatenews.com.au
+ * License: GPL v2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain: ausrealnews
  */
 
 defined('ABSPATH') || exit;
