@@ -356,3 +356,38 @@ export const GET_AGENCIES = gql`
     }
   }
 `;
+
+export const SEARCH_POSTS = gql`
+  query SearchPosts($search: String!, $first: Int = 30) {
+    posts(first: $first, where: { search: $search, status: "publish" }) {
+      nodes {
+        id
+        databaseId
+        title
+        excerpt
+        slug
+        date
+        featuredImage {
+          node {
+            sourceUrl
+            altText
+          }
+        }
+        categories {
+          nodes {
+            id
+            name
+            slug
+          }
+        }
+        states: terms(where: { taxonomy: STATE }) {
+          nodes {
+            id
+            name
+            slug
+          }
+        }
+      }
+    }
+  }
+`;

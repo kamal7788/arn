@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { apolloClient } from '@/lib/apollo-client';
 import { GET_SITE_INFO } from '@/lib/graphql/queries';
-import Link from 'next/link';
+import Header from '@/components/Header';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -32,30 +32,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en-AU">
       <body>
-        <header className="header">
-          <div className="container">
-            <Link href="/" className="logo">
-              <span className="logo-mark">AR</span>
-              <span className="logo-text">{site?.title || 'Aus Real Estate News'}</span>
-            </Link>
-            <nav className="main-nav">
-              <Link href="/category/market">Market</Link>
-              <Link href="/category/policy">Policy</Link>
-              <Link href="/category/development">Development</Link>
-              <span className="nav-divider">|</span>
-              <Link href="/state/nsw">NSW</Link>
-              <Link href="/state/vic">VIC</Link>
-              <Link href="/state/qld">QLD</Link>
-              <Link href="/state/wa">WA</Link>
-              <Link href="/state/sa">SA</Link>
-            </nav>
-            <nav className="admin-nav">
-              <Link href="/agent/dashboard" className="btn btn-sm">Agent Dashboard</Link>
-              <Link href="/admin/queue" className="btn btn-sm btn-outline">Editorial Queue</Link>
-              <Link href="/admin/applications" className="btn btn-sm btn-outline">Applications</Link>
-            </nav>
-          </div>
-        </header>
+        <Header />
         <main className="main">
           <div className="container">{children}</div>
         </main>
@@ -63,28 +40,32 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <div className="container">
             <div className="footer-grid">
               <div className="footer-section">
-                <strong>Aus Real Estate News</strong>
+                <strong>{site?.title || 'Aus Real Estate News'}</strong>
                 <p>Australian real estate intelligence — market data, suburb guides, and policy analysis.</p>
               </div>
               <div className="footer-section">
-                <strong>Markets</strong>
-                <Link href="/state/nsw">NSW</Link>
-                <Link href="/state/vic">VIC</Link>
-                <Link href="/state/qld">QLD</Link>
-                <Link href="/state/wa">WA</Link>
-                <Link href="/state/sa">SA</Link>
+                <strong>Categories</strong>
+                <a href="/category/market">Market</a>
+                <a href="/category/policy">Policy</a>
+                <a href="/category/development">Development</a>
+                <a href="/category/technology">Technology</a>
+                <a href="/category/finance">Finance</a>
               </div>
               <div className="footer-section">
-                <strong>Categories</strong>
-                <Link href="/category/market">Market Reports</Link>
-                <Link href="/category/policy">Policy Updates</Link>
-                <Link href="/category/development">Development</Link>
+                <strong>States</strong>
+                <a href="/state/nsw">NSW</a>
+                <a href="/state/vic">VIC</a>
+                <a href="/state/qld">QLD</a>
+                <a href="/state/wa">WA</a>
+                <a href="/state/sa">SA</a>
+                <a href="/state/tas">TAS</a>
+                <a href="/state/act">ACT</a>
+                <a href="/state/nt">NT</a>
               </div>
               <div className="footer-section">
                 <strong>Platform</strong>
-                <Link href="/agent/dashboard">Agent Dashboard</Link>
-                <Link href="/admin/queue">Editorial Queue</Link>
-                <Link href="/admin/applications">Applications</Link>
+                <a href="/agent/dashboard">Agent Dashboard</a>
+                <a href="/admin/queue">Editorial Queue</a>
               </div>
             </div>
             <div className="footer-bottom">
