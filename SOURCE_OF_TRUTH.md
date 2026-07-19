@@ -517,15 +517,6 @@ ausrealnews/
 │           └── queries.ts                    # All GraphQL queries
 │
 ├── wordpress/
-│   ├── ausrealnews-content-model/            # WP Plugin: Content Model
-│   │   ├── ausrealnews-content-model.php
-│   │   └── includes/
-│   │       ├── class-post-types.php          # 4 CPTs
-│   │       ├── class-taxonomies.php          # 6 taxonomies (incl. post_tag)
-│   │       ├── class-acf-fields.php          # ACF field groups
-│   │       ├── class-graphql-schema.php      # WPGraphQL extensions
-│   │       └── class-roles.php               # editor_in_chief, agent_contributor
-│   │
 │   └── ausrealnews-mcp/                      # WP Plugin: MCP Server
 │       ├── ausrealnews-mcp.php
 │       └── includes/
@@ -562,14 +553,31 @@ ausrealnews/
 
 ### Plugin Activation Order
 
-1. **Aus Real Estate News Content Model** — Registers CPTs, taxonomies, ACF fields, GraphQL schema, roles
-2. **Aus Real Estate News MCP Server** — Registers MCP server, tools, API key management
+1. **WPGraphQL** — GraphQL endpoint
+2. **WPGraphQL for ACF** — Exposes ACF fields via GraphQL
+3. **ACF Pro** — Custom fields, CPTs, and taxonomies (all managed via admin UI)
+4. **WordPress MCP Adapter** — MCP server framework
+5. **Aus Real Estate News MCP Server** — Custom MCP tools for AI agents
 
 ### Required WordPress Plugins
 
-- WPGraphQL
-- ACF Pro
-- WordPress MCP Adapter (`https://github.com/WordPress/mcp-adapter`)
+| Plugin | Source | Purpose |
+|--------|--------|---------|
+| WPGraphQL | WordPress.org | GraphQL endpoint at `/graphql` |
+| WPGraphQL for ACF | [GitHub](https://github.com/wp-graphql/wp-graphql-acf) | Exposes ACF fields via GraphQL |
+| ACF Pro | [advancedcustomfields.com](https://www.advancedcustomfields.com/) | CPTs, taxonomies, custom fields — all via admin UI |
+| WordPress MCP Adapter | [GitHub](https://github.com/WordPress/mcp-adapter) | MCP server framework |
+| Aus Real Estate News MCP Server | `wordpress/ausrealnews-mcp/` | 12 custom MCP tools for AI agents |
+
+### Content Model (via ACF Pro UI)
+
+All CPTs, taxonomies, and custom fields are created through the WordPress admin:
+
+- **CPTs:** `ACF → Post Types → Add New`
+- **Taxonomies:** `ACF → Taxonomies → Add New`
+- **Field Groups:** `ACF → Field Groups → Add New`
+
+No code-based plugins needed for content modeling.
 
 ### MCP API Key Generation
 
@@ -661,8 +669,8 @@ npm install && npm run build && npm start
 | MCP server 401 | Verify API key in `X-MCP-API-Key` header |
 | Build fails on Hostinger | Ensure Node.js 18+ and sufficient memory |
 | ISR not working | Check `REVALIDATION_SECRET` matches |
-| ACF fields missing | Activate ACF Pro and the content model plugin |
-| Posts not showing in GraphQL | Verify `show_in_graphql => true` on CPT registration |
+| ACF fields missing | Verify field groups are created in ACF → Field Groups and attached to the correct post types |
+| Posts not showing in GraphQL | Verify "Show in GraphQL" is enabled on the CPT in ACF → Post Types |
 | Agent cannot publish | Expected: `agent_contributor` role lacks `publish_posts` capability |
 
 ---
@@ -688,10 +696,9 @@ Install and activate plugins in this exact order:
 |-------|--------|--------|---------|
 | 1 | **WPGraphQL** | WordPress.org or [GitHub releases](https://github.com/wp-graphql/wp-graphql/releases) | GraphQL endpoint at `/graphql` |
 | 2 | **WPGraphQL for ACF** | [GitHub](https://github.com/wp-graphql/wp-graphql-acf) | Exposes ACF fields via GraphQL |
-| 3 | **ACF Pro** | [Advanced Custom Fields Pro](https://www.advancedcustomfields.com/) | Custom fields for CPTs |
-| 4 | **Aus Real Estate News — Content Model** | `wordpress/ausrealnews-content-model/` (upload as zip or copy to `wp-content/plugins/`) | Registers 5 CPTs, 4 taxonomies, ACF fields, GraphQL schema, roles |
-| 5 | **WordPress MCP Adapter** | [GitHub](https://github.com/WordPress/mcp-adapter) | MCP server integration |
-| 6 | **Aus Real Estate News — MCP Server** | `wordpress/ausrealnews-mcp/` | Registers 12 MCP tools for AI agents |
+| 3 | **ACF Pro** | [Advanced Custom Fields Pro](https://www.advancedcustomfields.com/) | CPTs, taxonomies, custom fields — all via admin UI |
+| 4 | **WordPress MCP Adapter** | [GitHub](https://github.com/WordPress/mcp-adapter/releases/latest/download/mcp-adapter.zip) | MCP server framework |
+| 5 | **Aus Real Estate News — MCP Server** | `wordpress/ausrealnews-mcp/` (upload as zip) | 12 custom MCP tools for AI agents |
 
 ### 17.3 WPGraphQL Configuration
 
@@ -710,7 +717,7 @@ After activating WPGraphQL:
 
 #### Exposing Custom Post Types
 
-The content model plugin automatically sets `show_in_graphql => true` on all CPTs. Verify:
+ACF Pro automatically sets `show_in_graphql => true` on CPTs created via its UI. After creating your CPTs (see section 17.4), verify:
 
 1. Go to `GraphQL → GraphQL Explorer` in WordPress admin
 2. Run:
@@ -727,7 +734,7 @@ The content model plugin automatically sets `show_in_graphql => true` on all CPT
 
 #### Exposing Taxonomies
 
-The content model plugin registers `state`, `city`, `suburb`, and `asset_class` taxonomies with `show_in_graphql => true`. Verify:
+ACF Pro automatically sets `show_in_graphql => true` on taxonomies created via its UI. After creating your taxonomies (see section 17.4), verify:
 
 ```graphql
 query {
@@ -736,69 +743,155 @@ query {
 }
 ```
 
-### 17.4 ACF Pro Configuration
+### 17.4 ACF Pro — Create Content Model via Admin UI
 
-After activating ACF Pro:
+All CPTs, taxonomies, and field groups are created through the ACF admin interface. No code required.
 
-1. **Go to** `ACF → Options` and enable `ACF Options Pages` if needed (not required for this project)
-2. **Verify field groups** are registered by the content model plugin:
-   - Go to `ACF → Field Groups`
-   - Should see: `Article Settings`, `Market Report Fields`, `Agent Profile`, `Agency Profile`
-3. **Verify ACF fields appear** in GraphQL:
-   ```graphql
-   query {
-     posts(first: 1) {
-       nodes {
-         title
-         sourceUrls
-         aiPipelineId
-         riskLevel
-         isAiGenerated
-       }
-     }
-   }
-   ```
+#### Step 1: Create Custom Post Types
 
-#### ACF Field Group Locations
+Go to `ACF → Post Types → Add New` and create:
 
-| Field Group | Location Rule | Post Types |
-|-------------|---------------|------------|
-| Article Settings | Post Type = post, suburb_guide, policy_update | post, suburb_guide, policy_update |
-| Market Report Fields | Post Type = market_report | market_report |
-| Agent Profile | User Role = agent_contributor | (user fields) |
-| Agency Profile | Post Type = agency | agency |
+| Post Type Label | Post Type Key | Plural Label | Singular Label | Has Archives | Show in GraphQL |
+|-----------------|---------------|--------------|----------------|--------------|-----------------|
+| Market Report | `market_report` | Market Reports | Market Report | Yes | Yes |
+| Suburb Guide | `suburb_guide` | Suburb Guides | Suburb Guide | Yes | Yes |
+| Policy Update | `policy_update` | Policy Updates | Policy Update | Yes | Yes |
+| Agency | `agency` | Agencies | Agency | Yes | Yes |
+
+**Settings for each CPT:**
+- Enable **Show in REST API** (required for block editor)
+- Enable **Show in GraphQL** (required for frontend)
+- Set **GraphQL Single Name** and **GraphQL Plural Name** (e.g., `marketReport` / `marketReports`)
+- Enable **Archives** if you want archive pages
+
+#### Step 2: Create Taxonomies
+
+Go to `ACF → Taxonomies → Add New` and create:
+
+| Taxonomy Label | Taxonomy Key | Plural Label | Singular Label | Hierarchical | Post Types | Show in GraphQL |
+|----------------|--------------|--------------|----------------|--------------|------------|-----------------|
+| State | `state` | States | State | No | post, market_report, suburb_guide, policy_update | Yes |
+| City | `city` | Cities | City | No | post, market_report, suburb_guide | Yes |
+| Suburb | `suburb` | Suburbs | Suburb | No | post, market_report, suburb_guide | Yes |
+| Asset Class | `asset_class` | Asset Classes | Asset Class | Yes | post, market_report, suburb_guide | Yes |
+
+**GraphQL Names:** Use singular capitalized names (e.g., `State`, `City`, `Suburb`, `AssetClass`)
+
+#### Step 3: Create Field Groups
+
+Go to `ACF → Field Groups → Add New` and create:
+
+**Field Group 1: Article Settings**
+- Location: Post Type = post, suburb_guide, policy_update
+- Fields:
+
+| Field Label | Field Key | Type | Notes |
+|-------------|-----------|------|-------|
+| Source URLs | `source_urls` | URL | Allow multiple values |
+| AI Pipeline ID | `ai_pipeline_id` | Text | n8n workflow reference |
+| Risk Level | `risk_level` | Select | Choices: Low, Medium, High |
+| Is AI Generated | `is_ai_generated` | True/False | Default: false |
+
+**Field Group 2: Market Report Fields**
+- Location: Post Type = market_report
+- Fields:
+
+| Field Label | Field Key | Type | Notes |
+|-------------|-----------|------|-------|
+| Key Metrics | `key_metrics` | Group | Nested fields below |
+| — Median Price | `median_price` | Number | Min 0, Required |
+| — YoY Change | `yoy_change` | Number | %, range -100 to 100 |
+| — Vacancy Rate | `vacancy_rate` | Number | %, range 0 to 100 |
+| — Days on Market | `days_on_market` | Number | Min 0 |
+| Source URLs | `source_urls` | URL | Allow multiple |
+| Risk Level | `risk_level` | Select | Choices: Low, Medium, High |
+| Is AI Generated | `is_ai_generated` | True/False | Default: false |
+
+**Field Group 3: Agency Profile**
+- Location: Post Type = agency
+- Fields:
+
+| Field Label | Field Key | Type | Notes |
+|-------------|-----------|------|-------|
+| Description | `description` | Textarea | |
+| Website | `website` | URL | |
+| Social Links | `social_links` | Group | Nested fields below |
+| — Facebook | `facebook` | URL | |
+| — Instagram | `instagram` | URL | |
+| — LinkedIn | `linkedin` | URL | |
+
+#### Step 4: Verify in GraphQL
+
+After creating everything, test in the GraphQL Explorer:
+
+```graphql
+query {
+  marketReports(first: 1) {
+    nodes {
+      title
+      keyMetrics {
+        medianPrice
+        yoyChange
+        vacancyRate
+        daysOnMarket
+      }
+    }
+  }
+  states(first: 8) {
+    nodes {
+      name
+      slug
+    }
+  }
+}
+```
 
 ### 17.5 Content Model Verification
 
 #### Verify Custom Post Types
 
-Go to `Settings → Writing` or check the admin menu for:
+Go to `ACF → Post Types` and verify all 4 CPTs exist:
 
-- Posts (native)
-- Market Reports
-- Suburb Guides
-- Policy Updates
-- Agencies
+- Market Reports (`market_report`)
+- Suburb Guides (`suburb_guide`)
+- Policy Updates (`policy_update`)
+- Agencies (`agency`)
+
+Also check the admin menu for the corresponding menu items.
 
 #### Verify Taxonomies
 
-Go to `Posts → Categories` (native) and check for:
+Go to `ACF → Taxonomies` and verify all 4 taxonomies exist:
 
-- **Categories:** Market, Policy, Development, Technology, Finance
-- **States:** NSW, VIC, QLD, WA, SA, TAS, ACT, NT
-- **Asset Classes:** House, Unit, Townhouse, Commercial, Land
+- State (`state`)
+- City (`city`)
+- Suburb (`suburb`)
+- Asset Class (`asset_class`)
 
-#### Verify User Roles
+Go to `Posts → Categories` (native) and add:
 
-Go to `Users → Roles` and check for:
+| Category | Slug |
+|----------|------|
+| Market | `market` |
+| Policy | `policy` |
+| Development | `development` |
+| Technology | `technology` |
+| Finance | `finance` |
 
-- Administrator
-- Editor
-- Author
-- Contributor
-- Subscriber
-- **editor_in_chief** (custom)
-- **agent_contributor** (custom)
+#### Verify State Terms
+
+Go to `Posts → States` and add all 8 Australian states/territories:
+
+| State Name | Slug |
+|------------|------|
+| New South Wales | `nsw` |
+| Victoria | `vic` |
+| Queensland | `qld` |
+| Western Australia | `wa` |
+| South Australia | `sa` |
+| Tasmania | `tas` |
+| Australian Capital Territory | `act` |
+| Northern Territory | `nt` |
 
 ### 17.6 Category and Taxonomy Seeding
 
