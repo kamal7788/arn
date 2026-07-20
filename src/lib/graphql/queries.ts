@@ -6,280 +6,42 @@ export const POST_FIELDS = gql`
     databaseId
     title
     excerpt
-    content
     slug
+    uri
     date
-    modified
-    status
     featuredImage {
       node {
         sourceUrl
         altText
       }
     }
-    author {
-      node {
-        id
-        databaseId
-        name
-        slug
-        avatar {
-          url
-        }
-        ... on AgentAuthor {
-          headline: agentHeadline
-          bio: agentBio
-          serviceArea: agentServiceArea
-          agencyId: agentAgencyId
-        }
-      }
-    }
     categories {
       nodes {
         id
-        databaseId
         name
         slug
       }
     }
-    states: terms(where: { taxonomy: STATE }) {
+    states {
       nodes {
         id
-        databaseId
         name
         slug
       }
     }
-    cities: terms(where: { taxonomy: CITY }) {
+    assetClasses {
       nodes {
         id
-        databaseId
-        name
-        slug
-      }
-    }
-    suburbs: terms(where: { taxonomy: SUBURB }) {
-      nodes {
-        id
-        databaseId
-        name
-        slug
-      }
-    }
-    assetClasses: terms(where: { taxonomy: ASSETCLASS }) {
-      nodes {
-        id
-        databaseId
         name
         slug
       }
     }
   }
-`;
-
-export const MARKET_REPORT_FIELDS = gql`
-  fragment MarketReportFields on MarketReport {
-    ...PostFields
-    keyMetrics: acf(key: "keyMetrics") {
-      medianPrice
-      yoyChange
-      vacancyRate
-      daysOnMarket
-    }
-    sourceUrls: acf(key: "sourceUrls")
-    aiPipelineId: acf(key: "aiPipelineId")
-    riskLevel: acf(key: "riskLevel")
-    isAiGenerated: acf(key: "isAiGenerated")
-  }
-  ${POST_FIELDS}
 `;
 
 export const GET_POSTS = gql`
-  query GetPosts(
-    $first: Int = 10
-    $after: String
-    $where: RootQueryToPostConnectionWhereArgsInput
-  ) {
-    posts(first: $first, after: $after, where: $where) {
-      nodes {
-        ...PostFields
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
-      }
-    }
-  }
-  ${POST_FIELDS}
-`;
-
-export const GET_POST_BY_SLUG = gql`
-  query GetPostBySlug($slug: ID!) {
-    post(id: $slug, idType: SLUG) {
-      ...PostFields
-      content
-    }
-  }
-  ${POST_FIELDS}
-`;
-
-export const GET_MARKET_REPORTS = gql`
-  query GetMarketReports($first: Int = 10, $after: String) {
-    marketReports(first: $first, after: $after) {
-      nodes {
-        ...MarketReportFields
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
-      }
-    }
-  }
-  ${MARKET_REPORT_FIELDS}
-`;
-
-export const GET_MARKET_REPORT_BY_SLUG = gql`
-  query GetMarketReportBySlug($slug: ID!) {
-    marketReport(id: $slug, idType: SLUG) {
-      ...MarketReportFields
-      content
-    }
-  }
-  ${MARKET_REPORT_FIELDS}
-`;
-
-export const GET_CATEGORIES = gql`
-  query GetCategories($first: Int = 100) {
-    categories(first: $first) {
-      nodes {
-        id
-        databaseId
-        name
-        slug
-        description
-        count
-      }
-    }
-  }
-`;
-
-export const GET_STATES = gql`
-  query GetStates($first: Int = 100) {
-    states(first: $first) {
-      nodes {
-        id
-        databaseId
-        name
-        slug
-        count
-      }
-    }
-  }
-`;
-
-export const GET_CITIES = gql`
-  query GetCities($first: Int = 100, $where: RootQueryToCityConnectionWhereArgsInput) {
-    cities(first: $first, where: $where) {
-      nodes {
-        id
-        databaseId
-        name
-        slug
-        count
-      }
-    }
-  }
-`;
-
-export const GET_SUBURBS = gql`
-  query GetSuburbs($first: Int = 100, $where: RootQueryToSuburbConnectionWhereArgsInput) {
-    suburbs(first: $first, where: $where) {
-      nodes {
-        id
-        databaseId
-        name
-        slug
-        count
-      }
-    }
-  }
-`;
-
-export const GET_AGENT_POSTS = gql`
-  query GetAgentPosts($authorId: Int!, $first: Int = 20, $status: String) {
-    posts(
-      first: $first
-      where: { author: $authorId, status: $status }
-    ) {
-      nodes {
-        ...PostFields
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
-      }
-    }
-  }
-  ${POST_FIELDS}
-`;
-
-export const GET_DRAFT_POSTS = gql`
-  query GetDraftPosts($first: Int = 50) {
-    posts(first: $first, where: { status: "draft" }) {
-      nodes {
-        ...PostFields
-      }
-    }
-  }
-  ${POST_FIELDS}
-`;
-
-export const GET_SITE_INFO = gql`
-  query GetSiteInfo {
-    generalSettings {
-      title
-      description
-      url
-    }
-  }
-`;
-
-export const GET_ALL_POST_SLUGS = gql`
-  query GetAllPostSlugs {
-    posts(first: 1000) {
-      nodes {
-        slug
-        date
-        modified
-      }
-    }
-    marketReports(first: 1000) {
-      nodes {
-        slug
-        date
-        modified
-      }
-    }
-    suburbGuides(first: 1000) {
-      nodes {
-        slug
-        date
-        modified
-      }
-    }
-    policyUpdates(first: 1000) {
-      nodes {
-        slug
-        date
-        modified
-      }
-    }
-  }
-`;
-
-export const GET_POSTS_BY_STATE = gql`
-  query GetPostsByState($stateSlug: String!, $first: Int = 20) {
-    posts(first: $first, where: { taxQuery: { taxArray: [{ taxonomy: STATE, terms: [$stateSlug], field: SLUG, operator: IN }] } }) {
+  query GetPosts($first: Int = 50, $after: String) {
+    posts(first: $first, after: $after) {
       nodes {
         ...PostFields
       }
@@ -293,8 +55,8 @@ export const GET_POSTS_BY_STATE = gql`
 `;
 
 export const GET_POSTS_BY_CATEGORY = gql`
-  query GetPostsByCategory($categorySlug: String!, $first: Int = 20) {
-    posts(first: $first, where: { categorySlug: $categorySlug }) {
+  query GetPostsByCategory($category: String!, $first: Int = 50) {
+    posts(first: $first, where: { categoryName: $category }) {
       nodes {
         ...PostFields
       }
@@ -307,65 +69,134 @@ export const GET_POSTS_BY_CATEGORY = gql`
   ${POST_FIELDS}
 `;
 
-export const GET_POSTS_BY_SUBURB = gql`
-  query GetPostsBySuburb($suburbSlug: String!, $first: Int = 20) {
-    posts(
-      first: $first
-      where: { taxQuery: { taxArray: [{ taxonomy: SUBURB, terms: [$suburbSlug], field: SLUG, operator: IN }] } }
-    ) {
-      nodes {
-        ...PostFields
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
-      }
-    }
-  }
-  ${POST_FIELDS}
-`;
-
-export const GET_AGENCY_BY_SLUG = gql`
-  query GetAgencyBySlug($slug: ID!) {
-    agency(id: $slug, idType: SLUG) {
+export const GET_POST = gql`
+  query GetPost($slug: String!) {
+    postBy(slug: $slug) {
       id
       databaseId
-      name
-      slug
+      title
       content
-      description: acf(key: "description")
-      website: acf(key: "website")
-      socialLinks: acf(key: "socialLinks") {
-        facebook
-        instagram
-        linkedin
+      excerpt
+      slug
+      uri
+      date
+      author {
+        node {
+          name
+        }
+      }
+      featuredImage {
+        node {
+          sourceUrl
+          altText
+        }
+      }
+      categories {
+        nodes {
+          id
+          name
+          slug
+        }
+      }
+      states {
+        nodes {
+          id
+          name
+          slug
+        }
+      }
+      assetClasses {
+        nodes {
+          id
+          name
+          slug
+        }
+      }
+    }
+  }
+`;
+
+export const GET_SUBURB_GUIDES = gql`
+  query GetSuburbGuides($first: Int = 50, $after: String) {
+    suburbGuides(first: $first, after: $after) {
+      nodes {
+        id
+        databaseId
+        slug
+        uri
+        date
+        excerpt
+        featuredImage {
+          node {
+            sourceUrl
+            altText
+          }
+        }
+        states {
+          nodes {
+            id
+            name
+            slug
+          }
+        }
+        suburbs {
+          nodes {
+            id
+            name
+            slug
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+
+export const GET_SUBURB_GUIDE = gql`
+  query GetSuburbGuide($slug: String!) {
+    suburbGuideBy(slug: $slug) {
+      id
+      databaseId
+      slug
+      uri
+      date
+      content
+      excerpt
+      featuredImage {
+        node {
+          sourceUrl
+          altText
+        }
+      }
+      states {
+        nodes {
+          id
+          name
+          slug
+        }
+      }
+      suburbs {
+        nodes {
+          id
+          name
+          slug
+        }
       }
     }
   }
 `;
 
 export const GET_AGENCIES = gql`
-  query GetAgencies($first: Int = 50) {
-    agencies(first: $first) {
+  query GetAgencies($first: Int = 50, $after: String) {
+    agencies(first: $first, after: $after) {
       nodes {
         id
         databaseId
-        name
         slug
-      }
-    }
-  }
-`;
-
-export const SEARCH_POSTS = gql`
-  query SearchPosts($search: String!, $first: Int = 30) {
-    posts(first: $first, where: { search: $search, status: "publish" }) {
-      nodes {
-        id
-        databaseId
-        title
-        excerpt
-        slug
+        uri
         date
         featuredImage {
           node {
@@ -373,21 +204,188 @@ export const SEARCH_POSTS = gql`
             altText
           }
         }
-        categories {
+        states {
           nodes {
             id
             name
             slug
           }
         }
-        states: terms(where: { taxonomy: STATE }) {
-          nodes {
-            id
-            name
-            slug
+        agencyProfile {
+          description
+          website
+          address
+          googlePlaceId
+          socialLinks {
+            facebook
+            instagram
+            linkedin
           }
         }
       }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+
+export const GET_AGENCY = gql`
+  query GetAgency($slug: String!) {
+    agencyBy(slug: $slug) {
+      id
+      databaseId
+      slug
+      uri
+      date
+      content
+      excerpt
+      featuredImage {
+        node {
+          sourceUrl
+          altText
+        }
+      }
+      states {
+        nodes {
+          id
+          name
+          slug
+        }
+      }
+      agencyProfile {
+        description
+        website
+        address
+        googlePlaceId
+        socialLinks {
+          facebook
+          instagram
+          linkedin
+        }
+        agents {
+          nodes {
+            id
+            databaseId
+            slug
+            uri
+          }
+        }
+      }
+    }
+  }
+`;
+
+export const GET_AGENTS = gql`
+  query GetAgents($first: Int = 80, $after: String) {
+    agents(first: $first, after: $after) {
+      nodes {
+        id
+        databaseId
+        slug
+        uri
+        date
+        featuredImage {
+          node {
+            sourceUrl
+            altText
+          }
+        }
+        states {
+          nodes {
+            id
+            name
+            slug
+          }
+        }
+        agentProfile {
+          bio
+          email
+          phone
+          agency {
+            nodes {
+              id
+              databaseId
+              slug
+              uri
+            }
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+
+export const GET_AGENT = gql`
+  query GetAgent($slug: String!) {
+    agentBy(slug: $slug) {
+      id
+      databaseId
+      slug
+      uri
+      date
+      content
+      excerpt
+      featuredImage {
+        node {
+          sourceUrl
+          altText
+        }
+      }
+      states {
+        nodes {
+          id
+          name
+          slug
+        }
+      }
+      agentProfile {
+        bio
+        email
+        phone
+        facebook
+        linkedin
+        realestateProfile
+        domainProfile
+        agency {
+          nodes {
+            id
+            databaseId
+            slug
+            uri
+          }
+        }
+      }
+    }
+  }
+`;
+
+export const GET_TAXONOMY_TERMS = gql`
+  query GetTaxonomyTerms($taxonomy: TaxonomyEnum!) {
+    terms(where: { taxonomies: [$taxonomy] }, first: 100) {
+      nodes {
+        id
+        databaseId
+        name
+        slug
+        description
+        count
+      }
+    }
+  }
+`;
+
+export const GET_SITE_INFO = gql`
+  query GetSiteInfo {
+    generalSettings {
+      title
+      description
+      url
     }
   }
 `;

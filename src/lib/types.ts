@@ -5,6 +5,7 @@ export interface Post {
   excerpt: string;
   content: string;
   slug: string;
+  uri: string;
   date: string;
   modified: string;
   status: string;
@@ -14,95 +15,118 @@ export interface Post {
       altText: string;
     };
   };
-  author: {
-    node: AgentProfile;
+  author?: {
+    node: {
+      name: string;
+    };
   };
-  categories: {
-    nodes: Category[];
-  };
-  states: {
+  categories?: {
     nodes: TaxonomyTerm[];
   };
-  cities: {
+  states?: {
     nodes: TaxonomyTerm[];
   };
-  suburbs: {
+  assetClasses?: {
     nodes: TaxonomyTerm[];
-  };
-  assetClasses: {
-    nodes: TaxonomyTerm[];
-  };
-  agency?: {
-    node: AgencyProfile;
-  };
-  acf: ArticleACF;
-}
-
-export interface MarketReport extends Post {
-  acf: MarketReportACF;
-  keyMetrics?: {
-    medianPrice: number;
-    yoyChange: number;
-    vacancyRate: number;
-    daysOnMarket: number;
   };
 }
 
-export interface ArticleACF {
-  sourceUrls: string[];
-  aiPipelineId: string;
-  riskLevel: 'Low' | 'Medium' | 'High';
-  isAiGenerated: boolean;
-}
-
-export interface MarketReportACF extends ArticleACF {
-  keyMetrics: {
-    medianPrice: number;
-    yoyChange: number;
-    vacancyRate: number;
-    daysOnMarket: number;
-  };
-}
-
-export interface AgentProfile {
+export interface SuburbGuide {
   id: string;
   databaseId: number;
-  name: string;
   slug: string;
-  avatar?: {
-    url: string;
+  uri: string;
+  date: string;
+  content: string;
+  excerpt: string;
+  featuredImage?: {
+    node: {
+      sourceUrl: string;
+      altText: string;
+    };
   };
-  acf: {
-    headline: string;
-    bio: string;
-    serviceArea: string;
-    agencyId: number;
+  states?: { nodes: TaxonomyTerm[] };
+  suburbs?: { nodes: TaxonomyTerm[] };
+  assetClasses?: { nodes: TaxonomyTerm[] };
+  categories?: { nodes: TaxonomyTerm[] };
+}
+
+export interface Agency {
+  id: string;
+  databaseId: number;
+  slug: string;
+  uri: string;
+  date: string;
+  content: string;
+  excerpt: string;
+  featuredImage?: {
+    node: {
+      sourceUrl: string;
+      altText: string;
+    };
   };
+  states?: { nodes: TaxonomyTerm[] };
+  agencyProfile?: AgencyProfile;
 }
 
 export interface AgencyProfile {
-  id: string;
-  databaseId: number;
-  name: string;
-  slug: string;
-  acf: {
-    description: string;
-    website: string;
-    socialLinks: {
-      facebook?: string;
-      instagram?: string;
-      linkedin?: string;
-    };
+  description?: string;
+  website?: string;
+  address?: string;
+  googlePlaceId?: string;
+  socialLinks?: {
+    facebook?: string;
+    instagram?: string;
+    linkedin?: string;
+  };
+  agents?: {
+    nodes: AgentSummary[];
   };
 }
 
-export interface Category {
+export interface Agent {
   id: string;
   databaseId: number;
-  name: string;
   slug: string;
-  description: string;
-  count: number;
+  uri: string;
+  date: string;
+  content: string;
+  excerpt: string;
+  featuredImage?: {
+    node: {
+      sourceUrl: string;
+      altText: string;
+    };
+  };
+  states?: { nodes: TaxonomyTerm[] };
+  agentProfile?: AgentProfile;
+}
+
+export interface AgentProfile {
+  bio?: string;
+  email?: string;
+  phone?: string;
+  facebook?: string;
+  linkedin?: string;
+  realestateProfile?: string;
+  domainProfile?: string;
+  agency?: {
+    nodes: AgencySummary[];
+  };
+}
+
+export interface AgentSummary {
+  id: string;
+  databaseId: number;
+  slug: string;
+  uri: string;
+}
+
+export interface AgencySummary {
+  id: string;
+  databaseId: number;
+  slug: string;
+  uri: string;
 }
 
 export interface TaxonomyTerm {
@@ -110,7 +134,8 @@ export interface TaxonomyTerm {
   databaseId: number;
   name: string;
   slug: string;
-  count: number;
+  description?: string;
+  count?: number;
 }
 
 export interface PageInfo {
@@ -118,73 +143,7 @@ export interface PageInfo {
   endCursor: string;
 }
 
-export interface PaginatedPosts {
-  nodes: Post[];
+export interface Paginated<T> {
+  nodes: T[];
   pageInfo: PageInfo;
-}
-
-export interface SiteInfo {
-  name: string;
-  description: string;
-  url: string;
-}
-
-export interface MenuNode {
-  id: string;
-  label: string;
-  url: string;
-  children?: {
-    nodes: MenuNode[];
-  };
-}
-
-export interface AgentApplication {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  licenseDetails: string;
-  preferredAgency: string;
-  paymentSessionId: string;
-  planId: string;
-  status: 'pending' | 'approved' | 'denied';
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface EditorialDraft {
-  postId: number;
-  title: string;
-  slug: string;
-  status: string;
-  type: string;
-  agentId: number;
-  agentName: string;
-  createdAt: string;
-  modifiedAt: string;
-  riskLevel: 'Low' | 'Medium' | 'High';
-  isAiGenerated: boolean;
-  aiPipelineId: string;
-  aiSuggestions?: {
-    summary?: string;
-    headlines?: string[];
-    seoSuggestions?: string[];
-    factCheckNotes?: string[];
-  };
-}
-
-export interface EditorialQueueResponse {
-  drafts: EditorialDraft[];
-  total: number;
-  pages: number;
-}
-
-export interface AISuggestionResponse {
-  success: boolean;
-  suggestions: {
-    summary?: string;
-    headlines?: string[];
-    seoSuggestions?: string[];
-    factCheckNotes?: string[];
-  };
 }

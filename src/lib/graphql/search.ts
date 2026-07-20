@@ -23,7 +23,7 @@ export const SEARCH_POSTS = gql`
             slug
           }
         }
-        states: terms(where: { taxonomy: STATE }) {
+        states {
           nodes {
             id
             name

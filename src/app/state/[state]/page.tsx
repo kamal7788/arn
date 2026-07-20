@@ -1,13 +1,13 @@
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { apolloClient } from '@/lib/apollo-client';
-import { GET_POSTS_BY_STATE, GET_STATES, GET_SUBURBS } from '@/lib/graphql/queries';
-import type { Post, TaxonomyTerm } from '@/lib/types';
+import { GET_POSTS, GET_SUBURB_GUIDES, GET_AGENCIES, GET_AGENTS } from '@/lib/graphql/queries';
+import { filterByTerm } from '@/lib/filters';
+import type { Post, SuburbGuide, Agency, Agent } from '@/lib/types';
 
-type Props = { params: Promise<{ state: string; suburb?: string }> };
+type Props = { params: Promise<{ state: string }> };
 
-const STATE_NAMES: Record<string, string> = {
+const STATE_LABELS: Record<string, string> = {
   nsw: 'New South Wales',
   vic: 'Victoria',
   qld: 'Queensland',
@@ -19,47 +19,9 @@ const STATE_NAMES: Record<string, string> = {
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { state, suburb } = await params;
-  const stateName = STATE_NAMES[state]?.toUpperCase() || state.toUpperCase();
-  const title = suburb
-    ? `${suburb.charAt(0).toUpperCase() + suburb.slice(1)} — ${stateName} Real Estate`
-    : `${stateName} — Real Estate News`;
-  return { title };
-}
-
-async function getStatePosts(stateSlug: string) {
-  try {
-    const { data } = await apolloClient.query({
-      query: GET_POSTS_BY_STATE,
-      variables: { stateSlug, first: 50 },
-      fetchPolicy: 'no-cache',
-    });
-    return data.posts.nodes as Post[];
-  } catch {
-    return [];
-  }
-}
-
-async function getAllStates() {
-  try {
-    const { data } = await apolloClient.query({ query: GET_STATES, fetchPolicy: 'no-cache' });
-    return data.states.nodes;
-  } catch {
-    return [];
-  }
-}
-
-async function getStateSuburbs(stateSlug: string) {
-  try {
-    const { data } = await apolloClient.query({
-      query: GET_SUBURBS,
-      variables: { first: 100, where: { taxQuery: { taxArray: [{ taxonomy: 'STATE', terms: [stateSlug], field: 'SLUG', operator: 'IN' }] } } },
-      fetchPolicy: 'no-cache',
-    });
-    return data.suburbs.nodes as TaxonomyTerm[];
-  } catch {
-    return [];
-  }
+  const { state } = await params;
+  const name = STATE_LABELS[state] ?? state.toUpperCase();
+  return { title: `${name} — Real Estate News, Guides & Agencies` };
 }
 
 function formatDate(dateStr: string) {
@@ -67,85 +29,76 @@ function formatDate(dateStr: string) {
 }
 
 export default async function StatePage({ params }: Props) {
-  const { state, suburb } = await params;
-  const [posts, states, suburbs] = await Promise.all([
-    getStatePosts(state),
-    getAllStates(),
-    getStateSuburbs(state),
-  ]);
-  const stateName = STATE_NAMES[state];
-  if (!stateName) notFound();
+  const { state } = await params;
+  const name = STATE_LABELS[state] ?? state.toUpperCase();
 
-  const pageTitle = suburb
-    ? `${suburb.charAt(0).toUpperCase() + suburb.slice(1)}, ${stateName}`
-    : stateName;
+  const [{ data: postsData }, { data: guidesData }, { data: agenciesData }, { data: agentsData }] =
+    await Promise.all([
+      apolloClient.query({ query: GET_POSTS, variables: { first: 100 } }),
+      apolloClient.query({ query: GET_SUBURB_GUIDES, variables: { first: 100 } }),
+      apolloClient.query({ query: GET_AGENCIES, variables: { first: 100 } }),
+      apolloClient.query({ query: GET_AGENTS, variables: { first: 100 } }),
+    ]);
+
+  const posts = filterByTerm((postsData?.posts?.nodes ?? []) as Post[], state);
+  const guides = filterByTerm((guidesData?.suburbGuides?.nodes ?? []) as SuburbGuide[], state);
+  const agencies = filterByTerm((agenciesData?.agencies?.nodes ?? []) as Agency[], state);
+  const agents = filterByTerm((agentsData?.agents?.nodes ?? []) as Agent[], state);
 
   return (
-    <>
-      <div style={{ marginBottom: '2rem' }}>
-        <p style={{ color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
-          {suburb ? `${stateName} / Suburb` : 'State'}
-        </p>
-        <h1 style={{ fontSize: '2rem' }}>{pageTitle}</h1>
-      </div>
+    <section className="section">
+      <div className="container">
+        <h1 className="page-title">{name}</h1>
 
-      <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-        {states.map((s: { slug: string; name: string }) => (
-          <Link
-            key={s.slug}
-            href={`/state/${s.slug}`}
-            className="badge"
-            style={s.slug === state ? { background: 'var(--color-primary)', color: 'white' } : {}}
-          >
-            {s.name}
-          </Link>
-        ))}
-      </div>
-
-      {suburbs.length > 0 && (
-        <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <Link
-            href={`/state/${state}`}
-            className="badge"
-            style={!suburb ? { background: 'var(--color-primary)', color: 'white' } : {}}
-          >
-            All Suburbs
-          </Link>
-          {suburbs.map((s) => (
-            <Link
-              key={s.id}
-              href={`/state/${state}/${s.slug}`}
-              className="badge"
-              style={s.slug === suburb ? { background: 'var(--color-primary)', color: 'white' } : {}}
-            >
-              {s.name}
-            </Link>
-          ))}
-        </div>
-      )}
-
-      {posts.length > 0 ? (
-        <div className="post-grid">
-          {posts.map((post) => (
-            <Link key={post.id} href={`/articles/${post.slug}`} className="post-card">
-              {post.featuredImage?.node && (
-                <img src={post.featuredImage.node.sourceUrl} alt={post.featuredImage.node.altText} />
-              )}
-              <div className="post-card-body">
-                <h3>{post.title}</h3>
-                <div className="meta">{formatDate(post.date)}</div>
-                <div style={{ marginTop: '0.5rem' }}>
-                  {post.cities.nodes.map((city) => (
-                    <span key={city.id} className="badge" style={{ marginRight: '0.25rem' }}>{city.name}</span>
-                  ))}
-                </div>
+        <h2>News</h2>
+        <div className="card-grid">
+          {posts.map((p) => (
+            <Link key={p.id} href={p.uri} className="card">
+              <div className="card-body">
+                <h3>{p.title}</h3>
+                <p className="muted">{formatDate(p.date)}</p>
               </div>
             </Link>
           ))}
+          {posts.length === 0 && <p className="muted">No news for this state yet.</p>}
         </div>
-      ) : (
-        <p>No articles for this location yet.</p>
-      )}
-    </>
+
+        <h2>Suburb Guides</h2>
+        <div className="card-grid">
+          {guides.map((g) => (
+            <Link key={g.id} href={g.uri} className="card">
+              <div className="card-body">
+                <h3>{g.slug.replace(/-/g, ' ')}</h3>
+              </div>
+            </Link>
+          ))}
+          {guides.length === 0 && <p className="muted">No suburb guides yet.</p>}
+        </div>
+
+        <h2>Agencies</h2>
+        <div className="card-grid">
+          {agencies.map((a) => (
+            <Link key={a.id} href={a.uri} className="card">
+              <div className="card-body">
+                <h3>{a.slug.replace(/-/g, ' ')}</h3>
+              </div>
+            </Link>
+          ))}
+          {agencies.length === 0 && <p className="muted">No agencies yet.</p>}
+        </div>
+
+        <h2>Agents</h2>
+        <div className="card-grid">
+          {agents.map((a) => (
+            <Link key={a.id} href={a.uri} className="card">
+              <div className="card-body">
+                <h3>{a.slug.replace(/-/g, ' ')}</h3>
+              </div>
+            </Link>
+          ))}
+          {agents.length === 0 && <p className="muted">No agents yet.</p>}
+        </div>
+      </div>
+    </section>
   );
 }

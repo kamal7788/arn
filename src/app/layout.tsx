@@ -41,15 +41,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <div className="footer-grid">
               <div className="footer-section">
                 <strong>{site?.title || 'Aus Real Estate News'}</strong>
-                <p>Australian real estate intelligence — market data, suburb guides, and policy analysis.</p>
+                <p>Australian real estate intelligence — news, suburb guides, and agency directory.</p>
               </div>
               <div className="footer-section">
-                <strong>Categories</strong>
-                <a href="/category/market">Market</a>
-                <a href="/category/policy">Policy</a>
-                <a href="/category/development">Development</a>
-                <a href="/category/technology">Technology</a>
-                <a href="/category/finance">Finance</a>
+                <strong>Explore</strong>
+                <a href="/news">News</a>
+                <a href="/suburb-guides">Suburb Guides</a>
+                <a href="/agencies">Agencies</a>
+                <a href="/agents">Agents</a>
               </div>
               <div className="footer-section">
                 <strong>States</strong>
@@ -63,9 +62,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <a href="/state/nt">NT</a>
               </div>
               <div className="footer-section">
-                <strong>Platform</strong>
-                <a href="/agent/dashboard">Agent Dashboard</a>
-                <a href="/admin/queue">Editorial Queue</a>
+                <strong>Asset Classes</strong>
+                <a href="/asset-class/residential">Residential</a>
+                <a href="/asset-class/commercial">Commercial</a>
+                <a href="/asset-class/rural">Rural</a>
+                <a href="/asset-class/land">Land</a>
               </div>
             </div>
             <div className="footer-bottom">

@@ -5,11 +5,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 const NAV_ITEMS = [
-  { label: 'Market', href: '/category/market' },
-  { label: 'Policy', href: '/category/policy' },
-  { label: 'Development', href: '/category/development' },
+  { label: 'News', href: '/news' },
+  { label: 'Suburb Guides', href: '/suburb-guides' },
+  { label: 'Agencies', href: '/agencies' },
+  { label: 'Agents', href: '/agents' },
   {
-    label: 'State',
+    label: 'States',
     href: '/state',
     children: [
       { label: 'NSW', href: '/state/nsw' },
@@ -22,8 +23,7 @@ const NAV_ITEMS = [
       { label: 'NT', href: '/state/nt' },
     ],
   },
-  { label: 'Technology', href: '/category/technology' },
-  { label: 'Finance', href: '/category/finance' },
+  { label: 'Asset Classes', href: '/asset-class' },
 ];
 
 export default function Header() {

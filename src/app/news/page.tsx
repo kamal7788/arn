@@ -1,15 +1,13 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { apolloClient } from '@/lib/apollo-client';
-import { GET_POSTS_BY_CATEGORY } from '@/lib/graphql/queries';
+import { GET_POSTS } from '@/lib/graphql/queries';
 import type { Post } from '@/lib/types';
 
-type Props = { params: Promise<{ slug: string }> };
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  return { title: `${slug.charAt(0).toUpperCase() + slug.slice(1)} — Real Estate News` };
-}
+export const metadata: Metadata = {
+  title: 'News',
+  description: 'Latest Australian real estate news and commentary.',
+};
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-AU', {
@@ -19,25 +17,14 @@ function formatDate(dateStr: string) {
   });
 }
 
-export default async function CategoryPage({ params }: Props) {
-  const { slug } = await params;
-  const label = slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' ');
-
-  let posts: Post[] = [];
-  try {
-    const { data } = await apolloClient.query({
-      query: GET_POSTS_BY_CATEGORY,
-      variables: { category: slug, first: 50 },
-    });
-    posts = (data?.posts?.nodes ?? []) as Post[];
-  } catch {
-    posts = [];
-  }
+export default async function NewsPage() {
+  const { data } = await apolloClient.query({ query: GET_POSTS, variables: { first: 24 } });
+  const posts = (data?.posts?.nodes ?? []) as Post[];
 
   return (
     <section className="section">
       <div className="container">
-        <h1 className="page-title">{label}</h1>
+        <h1 className="page-title">News</h1>
         <div className="card-grid">
           {posts.map((post) => (
             <Link key={post.id} href={post.uri} className="card">
@@ -46,12 +33,14 @@ export default async function CategoryPage({ params }: Props) {
                 <img src={post.featuredImage.node.sourceUrl} alt={post.featuredImage.node.altText} />
               )}
               <div className="card-body">
+                {post.categories?.nodes?.[0] && (
+                  <span className="tag">{post.categories.nodes[0].name}</span>
+                )}
                 <h3>{post.title}</h3>
                 <p className="muted">{formatDate(post.date)}</p>
               </div>
             </Link>
           ))}
-          {posts.length === 0 && <p className="muted">No articles in this category yet.</p>}
         </div>
       </div>
     </section>

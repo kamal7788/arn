@@ -1,38 +1,14 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { apolloClient } from '@/lib/apollo-client';
-import { GET_POSTS, GET_MARKET_REPORTS } from '@/lib/graphql/queries';
-import type { Post, MarketReport } from '@/lib/types';
+import { GET_POSTS, GET_SUBURB_GUIDES, GET_AGENCIES } from '@/lib/graphql/queries';
+import type { Post, SuburbGuide, Agency } from '@/lib/types';
 
 export const metadata: Metadata = {
-  title: 'Australian Real Estate News — Latest Market Reports & Policy Updates',
+  title: 'Australian Real Estate News — Suburb Guides, Agencies & Market Commentary',
   description:
-    'Stay informed with the latest Australian real estate news, market reports, suburb guides, and property policy updates.',
+    'Stay informed with the latest Australian real estate news, suburb guides, and agency directory.',
 };
-
-async function getLatestPosts() {
-  try {
-    const { data } = await apolloClient.query({
-      query: GET_POSTS,
-      variables: { first: 12 },
-    });
-    return data.posts.nodes as Post[];
-  } catch {
-    return [];
-  }
-}
-
-async function getFeaturedReports() {
-  try {
-    const { data } = await apolloClient.query({
-      query: GET_MARKET_REPORTS,
-      variables: { first: 4 },
-    });
-    return data.marketReports.nodes as MarketReport[];
-  } catch {
-    return [];
-  }
-}
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-AU', {
@@ -43,74 +19,84 @@ function formatDate(dateStr: string) {
 }
 
 export default async function HomePage() {
-  const [posts, reports] = await Promise.all([getLatestPosts(), getFeaturedReports()]);
+  const [{ data: postsData }, { data: guidesData }, { data: agenciesData }] = await Promise.all([
+    apolloClient.query({ query: GET_POSTS, variables: { first: 6 } }),
+    apolloClient.query({ query: GET_SUBURB_GUIDES, variables: { first: 3 } }),
+    apolloClient.query({ query: GET_AGENCIES, variables: { first: 4 } }),
+  ]);
+
+  const posts = (postsData?.posts?.nodes ?? []) as Post[];
+  const guides = (guidesData?.suburbGuides?.nodes ?? []) as SuburbGuide[];
+  const agencies = (agenciesData?.agencies?.nodes ?? []) as Agency[];
 
   return (
     <>
       <section className="hero">
         <div className="container">
           <h1>Australian Real Estate News</h1>
-          <p>
-            Market intelligence, suburb guides, and policy analysis for the Australian property market.
-          </p>
+          <p>Market intelligence, suburb guides, and an agency directory for the Australian property market.</p>
         </div>
       </section>
 
-      {reports.length > 0 && (
-        <section style={{ marginBottom: '3rem' }}>
-          <div className="section-header">
-            <h2>Featured Market Reports</h2>
-            <Link href="/category/market">View All</Link>
-          </div>
-          <div className="post-grid post-grid-featured">
-            {reports.map((report) => (
-              <Link key={report.id} href={`/market-report/${report.slug}`} className="post-card">
-                {report.featuredImage?.node && (
-                  <img src={report.featuredImage.node.sourceUrl} alt={report.featuredImage.node.altText} />
-                )}
-                <div className="post-card-body">
-                  <span className="badge badge-market">Market Report</span>
-                  <h3 style={{ marginTop: '0.5rem' }}>{report.title}</h3>
-                  <div className="meta">{formatDate(report.date)}</div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {posts.length > 0 ? (
-        <section>
-          <div className="section-header">
-            <h2>Latest Articles</h2>
-          </div>
-          <div className="post-grid">
-            {posts.map((post) => (
-              <Link key={post.id} href={`/articles/${post.slug}`} className="post-card">
-                {post.featuredImage?.node && (
-                  <img src={post.featuredImage.node.sourceUrl} alt={post.featuredImage.node.altText} />
-                )}
-                <div className="post-card-body">
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    {post.categories.nodes.map((cat) => (
-                      <span key={cat.id} className="badge badge-category" style={{ marginRight: '0.25rem' }}>
-                        {cat.name}
-                      </span>
-                    ))}
-                  </div>
-                  <h3>{post.title}</h3>
-                  <div className="meta">{formatDate(post.date)}</div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ) : (
-        <div className="empty-state">
-          <h2>No articles published yet</h2>
-          <p>Content will appear here once articles are published in the CMS.</p>
+      <section className="section">
+        <div className="container section-head">
+          <h2>Latest News</h2>
+          <Link href="/news" className="see-all">See all &rarr;</Link>
         </div>
-      )}
+        <div className="card-grid">
+          {posts.map((post) => (
+            <Link key={post.id} href={post.uri} className="card">
+              {post.featuredImage?.node?.sourceUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={post.featuredImage.node.sourceUrl} alt={post.featuredImage.node.altText} />
+              )}
+              <div className="card-body">
+                {post.categories?.nodes?.[0] && (
+                  <span className="tag">{post.categories.nodes[0].name}</span>
+                )}
+                <h3>{post.title}</h3>
+                <p className="muted">{formatDate(post.date)}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="container section-head">
+          <h2>Suburb Guides</h2>
+          <Link href="/suburb-guides" className="see-all">See all &rarr;</Link>
+        </div>
+        <div className="card-grid">
+          {guides.map((g) => (
+            <Link key={g.id} href={g.uri} className="card">
+              <div className="card-body">
+                <h3>{g.slug.replace(/-/g, ' ')}</h3>
+                {g.states?.nodes?.[0] && <p className="muted">{g.states.nodes[0].name}</p>}
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="container section-head">
+          <h2>Featured Agencies</h2>
+          <Link href="/agencies" className="see-all">See all &rarr;</Link>
+        </div>
+        <div className="card-grid">
+          {agencies.map((a) => (
+            <Link key={a.id} href={a.uri} className="card">
+              <div className="card-body">
+                <h3>{a.slug.replace(/-/g, ' ')}</h3>
+                {a.agencyProfile?.website && (
+                  <p className="muted">{a.agencyProfile.website}</p>
+                )}
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
     </>
   );
 }

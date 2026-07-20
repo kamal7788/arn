@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { apolloClient } from '@/lib/apollo-client';
-import { SEARCH_POSTS } from '@/lib/graphql/queries';
+import { SEARCH_POSTS } from '@/lib/graphql/search';
 import type { Post } from '@/lib/types';
 
 type Props = { searchParams: Promise<{ q?: string }> };
@@ -77,10 +77,10 @@ export default async function SearchPage({ searchParams }: Props) {
       {results.length > 0 && (
         <div className="search-results">
           {results.map((post) => (
-            <Link key={post.id} href={`/articles/${post.slug}`} className="search-result-card">
+            <Link key={post.id} href={`/news/${post.slug}`} className="search-result-card">
               <div className="search-result-content">
                 <div className="search-result-meta">
-                  {post.categories.nodes.map((cat) => (
+                  {post.categories?.nodes?.map((cat) => (
                     <span key={cat.id} className="badge badge-category">{cat.name}</span>
                   ))}
                   {post.states?.nodes?.map((s) => (

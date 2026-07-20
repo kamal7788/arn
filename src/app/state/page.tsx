@@ -1,60 +1,50 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { apolloClient } from '@/lib/apollo-client';
-import { GET_STATES } from '@/lib/graphql/queries';
+import { GET_TAXONOMY_TERMS } from '@/lib/graphql/queries';
+import type { TaxonomyTerm } from '@/lib/types';
 
 export const metadata: Metadata = {
-  title: 'All States — Australian Real Estate News',
-  description: 'Browse real estate news by Australian state and territory.',
+  title: 'Browse by State',
+  description: 'Australian real estate news, guides, and agencies by state and territory.',
 };
 
-const STATE_SLUGS: Record<string, { name: string; abbr: string }> = {
-  nsw: { name: 'New South Wales', abbr: 'NSW' },
-  vic: { name: 'Victoria', abbr: 'VIC' },
-  qld: { name: 'Queensland', abbr: 'QLD' },
-  wa:  { name: 'Western Australia', abbr: 'WA' },
-  sa:  { name: 'South Australia', abbr: 'SA' },
-  tas: { name: 'Tasmania', abbr: 'TAS' },
-  act: { name: 'Australian Capital Territory', abbr: 'ACT' },
-  nt:  { name: 'Northern Territory', abbr: 'NT' },
+const STATE_LABELS: Record<string, string> = {
+  nsw: 'New South Wales',
+  vic: 'Victoria',
+  qld: 'Queensland',
+  wa: 'Western Australia',
+  sa: 'South Australia',
+  tas: 'Tasmania',
+  act: 'Australian Capital Territory',
+  nt: 'Northern Territory',
 };
 
-async function getStates() {
+export default async function StatesPage() {
+  let states: TaxonomyTerm[] = [];
   try {
-    const { data } = await apolloClient.query({ query: GET_STATES, fetchPolicy: 'no-cache' });
-    return data.states.nodes as { slug: string; name: string; count: number }[];
+    const { data } = await apolloClient.query({
+      query: GET_TAXONOMY_TERMS,
+      variables: { taxonomy: 'STATE' },
+    });
+    states = (data?.terms?.nodes ?? []) as TaxonomyTerm[];
   } catch {
-    return [];
+    states = [];
   }
-}
-
-export default async function StateHubPage() {
-  const states = await getStates();
 
   return (
-    <>
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2rem', fontFamily: 'var(--font-heading)' }}>States &amp; Territories</h1>
-        <p style={{ color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
-          Real estate news across all Australian states and territories.
-        </p>
-      </div>
-
-      <div className="state-grid">
-        {Object.entries(STATE_SLUGS).map(([slug, info]) => {
-          const wpState = states.find((s) => s.slug === slug);
-          const count = wpState?.count || 0;
-          return (
-            <Link key={slug} href={`/state/${slug}`} className="state-card">
-              <div className="state-card-abbr">{info.abbr}</div>
-              <div className="state-card-name">{info.name}</div>
-              <div className="state-card-count">
-                {count} {count === 1 ? 'article' : 'articles'}
-              </div>
+    <section className="section">
+      <div className="container">
+        <h1 className="page-title">Browse by State</h1>
+        <div className="state-grid">
+          {states.map((s) => (
+            <Link key={s.slug} href={`/state/${s.slug}`} className="state-card">
+              <h3>{STATE_LABELS[s.slug] ?? s.name}</h3>
+              <p className="muted">{s.name}</p>
             </Link>
-          );
-        })}
+          ))}
+        </div>
       </div>
-    </>
+    </section>
   );
 }
