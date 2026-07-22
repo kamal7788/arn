@@ -1,8 +1,8 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { apolloClient } from '@/lib/apollo-client';
-import { GET_POSTS } from '@/lib/graphql/queries';
-import type { Post } from '@/lib/types';
+import { GET_POSTS, GET_CATEGORIES } from '@/lib/graphql/queries';
+import type { Post, TaxonomyTerm } from '@/lib/types';
 
 export const metadata: Metadata = {
   title: 'Aus Real Estate News — Latest Australian Real Estate News',
@@ -19,69 +19,122 @@ function formatDate(dateStr: string) {
 }
 
 function stripHtml(html: string) {
-  return html.replace(/<[^>]+>/g, '').slice(0, 180);
+  return html.replace(/<[^>]+>/g, '').slice(0, 160);
+}
+
+function groupByCategory(posts: Post[], categories: TaxonomyTerm[]) {
+  const groups: { category: TaxonomyTerm; posts: Post[] }[] = [];
+  for (const cat of categories) {
+    const matched = posts.filter((p) => p.categories?.nodes?.some((c) => c.slug === cat.slug));
+    if (matched.length > 0) {
+      groups.push({ category: cat, posts: matched });
+    }
+  }
+  return groups;
 }
 
 export default async function HomePage() {
-  const { data } = await apolloClient.query({ query: GET_POSTS, variables: { first: 20 } });
-  const posts = (data?.posts?.nodes ?? []) as Post[];
+  const [{ data: postsData }, { data: catsData }] = await Promise.all([
+    apolloClient.query({ query: GET_POSTS, variables: { first: 30 } }),
+    apolloClient.query({ query: GET_CATEGORIES, variables: { first: 20 } }),
+  ]);
+
+  const posts = (postsData?.posts?.nodes ?? []) as Post[];
+  const allCats = ((catsData?.categories?.nodes ?? []) as TaxonomyTerm[]).filter(
+    (c) => c.slug !== 'uncategorized'
+  );
+
   const hero = posts[0];
   const rest = posts.slice(1);
+  const groups = groupByCategory(rest, allCats);
 
   return (
-    <section className="news-listing">
-      <div className="container">
-        {hero && (
-          <Link href={`/news/${hero.slug}`} className="news-hero">
-            <div className="news-hero-image">
-              {hero.featuredImage?.node?.sourceUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={hero.featuredImage.node.sourceUrl} alt={hero.featuredImage.node.altText || hero.title} />
-              ) : (
-                <div className="news-hero-fallback">AR</div>
-              )}
-            </div>
-            <div className="news-hero-body">
-              {hero.categories?.nodes?.[0] && (
-                <span className="tag">{hero.categories.nodes[0].name}</span>
-              )}
-              <h2>{hero.title}</h2>
-              <p className="news-excerpt">{stripHtml(hero.excerpt)}</p>
-              <span className="news-date">{formatDate(hero.date)}</span>
-            </div>
-          </Link>
-        )}
-
-        <div className="news-grid">
-          {rest.map((post) => (
-            <Link key={post.id} href={`/news/${post.slug}`} className="news-card">
-              <div className="news-card-image">
-                {post.featuredImage?.node?.sourceUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={post.featuredImage.node.sourceUrl} alt={post.featuredImage.node.altText || post.title} />
-                ) : (
-                  <div className="news-card-fallback">AR</div>
-                )}
-              </div>
-              <div className="news-card-body">
-                {post.categories?.nodes?.[0] && (
-                  <span className="tag">{post.categories.nodes[0].name}</span>
-                )}
-                <h3>{post.title}</h3>
-                <p className="news-excerpt">{stripHtml(post.excerpt)}</p>
-                <span className="news-date">{formatDate(post.date)}</span>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        {posts.length === 0 && (
-          <div className="empty-state">
-            <h2>No articles yet</h2>
-            <p>Check back soon for the latest Australian real estate news.</p>
+    <div className="homepage">
+      {/* Hero article */}
+      {hero && (
+        <Link href={`/news/${hero.slug}`} className="hp-hero">
+          <div className="hp-hero-image">
+            {hero.featuredImage?.node?.sourceUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={hero.featuredImage.node.sourceUrl} alt={hero.featuredImage.node.altText || hero.title} />
+            ) : (
+              <div className="hp-hero-fallback">AR</div>
+            )}
           </div>
-        )}
-      </div>
-    </section>
+          <div className="hp-hero-body">
+            {hero.categories?.nodes?.[0] && (
+              <span className="hp-category-label">{hero.categories.nodes[0].name}</span>
+            )}
+            <h1 className="hp-hero-title">{hero.title}</h1>
+            <p className="hp-hero-excerpt">{stripHtml(hero.excerpt)}</p>
+            <span className="hp-date">{formatDate(hero.date)}</span>
+          </div>
+        </Link>
+      )}
+
+      {/* Category sections */}
+      {groups.map(({ category, posts: catPosts }) => (
+        <section key={category.slug} className="hp-category-section">
+          <div className="hp-category-header">
+            <h2 className="hp-category-name">{category.name}</h2>
+            <Link href={`/category/${category.slug}`} className="hp-view-more">View More</Link>
+          </div>
+          <div className="hp-category-grid">
+            {catPosts.slice(0, 4).map((post, i) => (
+              <Link key={post.id} href={`/news/${post.slug}`} className={`hp-card ${i === 0 ? 'hp-card-featured' : ''}`}>
+                <div className="hp-card-image">
+                  {post.featuredImage?.node?.sourceUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={post.featuredImage.node.sourceUrl} alt={post.featuredImage.node.altText || post.title} />
+                  ) : (
+                    <div className="hp-card-fallback">AR</div>
+                  )}
+                </div>
+                <div className="hp-card-body">
+                  <h3 className="hp-card-title">{post.title}</h3>
+                  {i === 0 && <p className="hp-card-excerpt">{stripHtml(post.excerpt)}</p>}
+                  <span className="hp-date">{formatDate(post.date)}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ))}
+
+      {/* Fallback: flat grid if no categories matched */}
+      {groups.length === 0 && rest.length > 0 && (
+        <section className="hp-category-section">
+          <div className="hp-category-header">
+            <h2 className="hp-category-name">Latest News</h2>
+          </div>
+          <div className="hp-category-grid">
+            {rest.slice(0, 4).map((post, i) => (
+              <Link key={post.id} href={`/news/${post.slug}`} className={`hp-card ${i === 0 ? 'hp-card-featured' : ''}`}>
+                <div className="hp-card-image">
+                  {post.featuredImage?.node?.sourceUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={post.featuredImage.node.sourceUrl} alt={post.featuredImage.node.altText || post.title} />
+                  ) : (
+                    <div className="hp-card-fallback">AR</div>
+                  )}
+                </div>
+                <div className="hp-card-body">
+                  <h3 className="hp-card-title">{post.title}</h3>
+                  {i === 0 && <p className="hp-card-excerpt">{stripHtml(post.excerpt)}</p>}
+                  <span className="hp-date">{formatDate(post.date)}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {posts.length === 0 && (
+        <div className="empty-state">
+          <h2>No articles yet</h2>
+          <p>Check back soon for the latest Australian real estate news.</p>
+        </div>
+      )}
+    </div>
   );
 }
