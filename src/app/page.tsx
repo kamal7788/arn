@@ -1,11 +1,11 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { apolloClient } from '@/lib/apollo-client';
-import { GET_POSTS, GET_SUBURB_GUIDES, GET_AGENCIES } from '@/lib/graphql/queries';
-import type { Post, SuburbGuide, Agency } from '@/lib/types';
+import { GET_POSTS } from '@/lib/graphql/queries';
+import type { Post } from '@/lib/types';
 
 export const metadata: Metadata = {
-  title: 'Australian Real Estate News — Suburb Guides, Agencies & Market Commentary',
+  title: 'Aus Real Estate News — Latest Australian Real Estate News',
   description:
     'Stay informed with the latest Australian real estate news, suburb guides, and agency directory.',
 };
@@ -18,85 +18,70 @@ function formatDate(dateStr: string) {
   });
 }
 
-export default async function HomePage() {
-  const [{ data: postsData }, { data: guidesData }, { data: agenciesData }] = await Promise.all([
-    apolloClient.query({ query: GET_POSTS, variables: { first: 6 } }),
-    apolloClient.query({ query: GET_SUBURB_GUIDES, variables: { first: 3 } }),
-    apolloClient.query({ query: GET_AGENCIES, variables: { first: 4 } }),
-  ]);
+function stripHtml(html: string) {
+  return html.replace(/<[^>]+>/g, '').slice(0, 180);
+}
 
-  const posts = (postsData?.posts?.nodes ?? []) as Post[];
-  const guides = (guidesData?.suburbGuides?.nodes ?? []) as SuburbGuide[];
-  const agencies = (agenciesData?.agencies?.nodes ?? []) as Agency[];
+export default async function HomePage() {
+  const { data } = await apolloClient.query({ query: GET_POSTS, variables: { first: 20 } });
+  const posts = (data?.posts?.nodes ?? []) as Post[];
+  const hero = posts[0];
+  const rest = posts.slice(1);
 
   return (
-    <>
-      <section className="hero">
-        <div className="container">
-          <h1>Australian Real Estate News</h1>
-          <p>Market intelligence, suburb guides, and an agency directory for the Australian property market.</p>
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="container section-head">
-          <h2>Latest News</h2>
-          <Link href="/news" className="see-all">See all &rarr;</Link>
-        </div>
-        <div className="card-grid">
-          {posts.map((post) => (
-            <Link key={post.id} href={post.uri} className="card">
-              {post.featuredImage?.node?.sourceUrl && (
+    <section className="news-listing">
+      <div className="container">
+        {hero && (
+          <Link href={hero.uri} className="news-hero">
+            <div className="news-hero-image">
+              {hero.featuredImage?.node?.sourceUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={post.featuredImage.node.sourceUrl} alt={post.featuredImage.node.altText} />
+                <img src={hero.featuredImage.node.sourceUrl} alt={hero.featuredImage.node.altText || hero.title} />
+              ) : (
+                <div className="news-hero-fallback">AR</div>
               )}
-              <div className="card-body">
+            </div>
+            <div className="news-hero-body">
+              {hero.categories?.nodes?.[0] && (
+                <span className="tag">{hero.categories.nodes[0].name}</span>
+              )}
+              <h2>{hero.title}</h2>
+              <p className="news-excerpt">{stripHtml(hero.excerpt)}</p>
+              <span className="news-date">{formatDate(hero.date)}</span>
+            </div>
+          </Link>
+        )}
+
+        <div className="news-grid">
+          {rest.map((post) => (
+            <Link key={post.id} href={post.uri} className="news-card">
+              <div className="news-card-image">
+                {post.featuredImage?.node?.sourceUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={post.featuredImage.node.sourceUrl} alt={post.featuredImage.node.altText || post.title} />
+                ) : (
+                  <div className="news-card-fallback">AR</div>
+                )}
+              </div>
+              <div className="news-card-body">
                 {post.categories?.nodes?.[0] && (
                   <span className="tag">{post.categories.nodes[0].name}</span>
                 )}
                 <h3>{post.title}</h3>
-                <p className="muted">{formatDate(post.date)}</p>
+                <p className="news-excerpt">{stripHtml(post.excerpt)}</p>
+                <span className="news-date">{formatDate(post.date)}</span>
               </div>
             </Link>
           ))}
         </div>
-      </section>
 
-      <section className="section">
-        <div className="container section-head">
-          <h2>Suburb Guides</h2>
-          <Link href="/suburb-guides" className="see-all">See all &rarr;</Link>
-        </div>
-        <div className="card-grid">
-          {guides.map((g) => (
-            <Link key={g.id} href={g.uri} className="card">
-              <div className="card-body">
-                <h3>{g.slug.replace(/-/g, ' ')}</h3>
-                {g.states?.nodes?.[0] && <p className="muted">{g.states.nodes[0].name}</p>}
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="container section-head">
-          <h2>Featured Agencies</h2>
-          <Link href="/agencies" className="see-all">See all &rarr;</Link>
-        </div>
-        <div className="card-grid">
-          {agencies.map((a) => (
-            <Link key={a.id} href={a.uri} className="card">
-              <div className="card-body">
-                <h3>{a.slug.replace(/-/g, ' ')}</h3>
-                {a.agencyProfile?.website && (
-                  <p className="muted">{a.agencyProfile.website}</p>
-                )}
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-    </>
+        {posts.length === 0 && (
+          <div className="empty-state">
+            <h2>No articles yet</h2>
+            <p>Check back soon for the latest Australian real estate news.</p>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

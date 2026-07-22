@@ -28,6 +28,10 @@ function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+function stripHtml(html: string) {
+  return html.replace(/<[^>]+>/g, '').slice(0, 120);
+}
+
 export default async function StatePage({ params }: Props) {
   const { state } = await params;
   const name = STATE_LABELS[state] ?? state.toUpperCase();
@@ -45,58 +49,90 @@ export default async function StatePage({ params }: Props) {
   const agencies = filterByTerm((agenciesData?.agencies?.nodes ?? []) as Agency[], state);
   const agents = filterByTerm((agentsData?.agents?.nodes ?? []) as Agent[], state);
 
+  const featuredGuides = guides.slice(0, 3);
+  const featuredAgencies = agencies.slice(0, 3);
+  const featuredAgents = agents.slice(0, 5);
+
   return (
-    <section className="section">
+    <section className="state-page">
       <div className="container">
         <h1 className="page-title">{name}</h1>
 
-        <h2>News</h2>
-        <div className="card-grid">
-          {posts.map((p) => (
-            <Link key={p.id} href={p.uri} className="card">
-              <div className="card-body">
-                <h3>{p.title}</h3>
-                <p className="muted">{formatDate(p.date)}</p>
-              </div>
-            </Link>
-          ))}
-          {posts.length === 0 && <p className="muted">No news for this state yet.</p>}
-        </div>
+        <div className="state-layout">
+          <div className="state-main">
+            <h2>News in {name}</h2>
+            <div className="news-grid">
+              {posts.map((p) => (
+                <Link key={p.id} href={p.uri} className="news-card">
+                  <div className="news-card-image">
+                    {p.featuredImage?.node?.sourceUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={p.featuredImage.node.sourceUrl} alt={p.featuredImage.node.altText || p.title} />
+                    ) : (
+                      <div className="news-card-fallback">AR</div>
+                    )}
+                  </div>
+                  <div className="news-card-body">
+                    {p.categories?.nodes?.[0] && (
+                      <span className="tag">{p.categories.nodes[0].name}</span>
+                    )}
+                    <h3>{p.title}</h3>
+                    <p className="news-excerpt">{stripHtml(p.excerpt)}</p>
+                    <span className="news-date">{formatDate(p.date)}</span>
+                  </div>
+                </Link>
+              ))}
+              {posts.length === 0 && <p className="muted">No news for this state yet.</p>}
+            </div>
+          </div>
 
-        <h2>Suburb Guides</h2>
-        <div className="card-grid">
-          {guides.map((g) => (
-            <Link key={g.id} href={g.uri} className="card">
-              <div className="card-body">
-                <h3>{g.slug.replace(/-/g, ' ')}</h3>
+          <aside className="state-sidebar">
+            {featuredGuides.length > 0 && (
+              <div className="sidebar-section">
+                <h3>Suburb Guides</h3>
+                <ul className="sidebar-list">
+                  {featuredGuides.map((g) => (
+                    <li key={g.id}>
+                      <Link href={g.uri}>{g.slug.replace(/-/g, ' ')}</Link>
+                      {g.states?.nodes?.[0] && <span className="muted">{g.states.nodes[0].name}</span>}
+                    </li>
+                  ))}
+                </ul>
+                <Link href={`/suburb-guides?state=${state}`} className="sidebar-view-all">View all &rarr;</Link>
               </div>
-            </Link>
-          ))}
-          {guides.length === 0 && <p className="muted">No suburb guides yet.</p>}
-        </div>
+            )}
 
-        <h2>Agencies</h2>
-        <div className="card-grid">
-          {agencies.map((a) => (
-            <Link key={a.id} href={a.uri} className="card">
-              <div className="card-body">
-                <h3>{a.slug.replace(/-/g, ' ')}</h3>
+            {featuredAgencies.length > 0 && (
+              <div className="sidebar-section">
+                <h3>Agencies</h3>
+                <ul className="sidebar-list">
+                  {featuredAgencies.map((a) => (
+                    <li key={a.id}>
+                      <Link href={a.uri}>{a.slug.replace(/-/g, ' ')}</Link>
+                    </li>
+                  ))}
+                </ul>
+                <Link href={`/agencies?state=${state}`} className="sidebar-view-all">View all &rarr;</Link>
               </div>
-            </Link>
-          ))}
-          {agencies.length === 0 && <p className="muted">No agencies yet.</p>}
-        </div>
+            )}
 
-        <h2>Agents</h2>
-        <div className="card-grid">
-          {agents.map((a) => (
-            <Link key={a.id} href={a.uri} className="card">
-              <div className="card-body">
-                <h3>{a.slug.replace(/-/g, ' ')}</h3>
+            {featuredAgents.length > 0 && (
+              <div className="sidebar-section">
+                <h3>Agents</h3>
+                <ul className="sidebar-list">
+                  {featuredAgents.map((a) => (
+                    <li key={a.id}>
+                      <Link href={a.uri}>{a.slug.replace(/-/g, ' ')}</Link>
+                      {a.agentProfile?.agency?.nodes?.[0] && (
+                        <span className="muted">{a.agentProfile.agency.nodes[0].slug.replace(/-/g, ' ')}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                <Link href={`/agents?state=${state}`} className="sidebar-view-all">View all &rarr;</Link>
               </div>
-            </Link>
-          ))}
-          {agents.length === 0 && <p className="muted">No agents yet.</p>}
+            )}
+          </aside>
         </div>
       </div>
     </section>

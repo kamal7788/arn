@@ -2,7 +2,7 @@ import { gql } from '@apollo/client';
 
 export const SEARCH_POSTS = gql`
   query SearchPosts($search: String!, $first: Int = 30) {
-    posts(first: $first, where: { search: $search, status: "publish" }) {
+    posts(first: $first, where: { search: $search, status: PUBLISH }) {
       nodes {
         id
         databaseId
