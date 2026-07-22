@@ -19,7 +19,7 @@ export default async function AgenciesPage() {
         <h1 className="page-title">Agencies</h1>
         <div className="card-grid">
           {agencies.map((a) => (
-            <Link key={a.id} href={a.uri} className="card">
+            <Link key={a.id} href={`/agencies/${a.slug}`} className="card">
               {a.featuredImage?.node?.sourceUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={a.featuredImage.node.sourceUrl} alt={a.featuredImage.node.altText} />

@@ -26,4 +26,9 @@ export function bySlug(terms: TaxonomyTerm[], slug: string): TaxonomyTerm | unde
   return terms.find((t) => t.slug === slug);
 }
 
+export function contentUrl(type: 'news' | 'suburb-guide' | 'agency' | 'agent', slug: string): string {
+  const prefix = type === 'suburb-guide' ? 'suburb-guides' : type === 'agency' ? 'agencies' : type === 'agent' ? 'agents' : 'news';
+  return `/${prefix}/${slug}`;
+}
+
 export type { Post, SuburbGuide, Agency, Agent, TaxonomyTerm };

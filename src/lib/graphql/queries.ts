@@ -381,8 +381,8 @@ export const GET_TAXONOMY_TERMS = gql`
 `;
 
 export const GET_CATEGORIES = gql`
-  query GetCategories($first: Int = 20, $exclude: [ID]) {
-    categories(first: $first, where: { hideEmpty: true, exclude: $exclude }) {
+  query GetCategories($first: Int = 20) {
+    categories(first: $first) {
       nodes {
         id
         databaseId

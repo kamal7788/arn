@@ -34,7 +34,7 @@ export default async function AgentPage({ params }: Props) {
             <h1 className="page-title">{agent.slug.replace(/-/g, ' ')}</h1>
             {agency && (
               <p>
-                <Link href={agency.uri} className="tag">{agency.slug.replace(/-/g, ' ')}</Link>
+                <Link href={`/agencies/${agency.slug}`} className="tag">{agency.slug.replace(/-/g, ' ')}</Link>
               </p>
             )}
           </div>

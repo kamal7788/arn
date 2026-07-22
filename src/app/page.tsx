@@ -32,7 +32,7 @@ export default async function HomePage() {
     <section className="news-listing">
       <div className="container">
         {hero && (
-          <Link href={hero.uri} className="news-hero">
+          <Link href={`/news/${hero.slug}`} className="news-hero">
             <div className="news-hero-image">
               {hero.featuredImage?.node?.sourceUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -54,7 +54,7 @@ export default async function HomePage() {
 
         <div className="news-grid">
           {rest.map((post) => (
-            <Link key={post.id} href={post.uri} className="news-card">
+            <Link key={post.id} href={`/news/${post.slug}`} className="news-card">
               <div className="news-card-image">
                 {post.featuredImage?.node?.sourceUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element

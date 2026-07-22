@@ -40,7 +40,7 @@ export default async function CategoryPage({ params }: Props) {
         <h1 className="page-title">{label}</h1>
         <div className="card-grid">
           {posts.map((post) => (
-            <Link key={post.id} href={post.uri} className="card">
+            <Link key={post.id} href={`/news/${post.slug}`} className="card">
               {post.featuredImage?.node?.sourceUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={post.featuredImage.node.sourceUrl} alt={post.featuredImage.node.altText} />

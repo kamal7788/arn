@@ -63,7 +63,7 @@ export default async function StatePage({ params }: Props) {
             <h2>News in {name}</h2>
             <div className="news-grid">
               {posts.map((p) => (
-                <Link key={p.id} href={p.uri} className="news-card">
+                <Link key={p.id} href={`/news/${p.slug}`} className="news-card">
                   <div className="news-card-image">
                     {p.featuredImage?.node?.sourceUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -93,7 +93,7 @@ export default async function StatePage({ params }: Props) {
                 <ul className="sidebar-list">
                   {featuredGuides.map((g) => (
                     <li key={g.id}>
-                      <Link href={g.uri}>{g.slug.replace(/-/g, ' ')}</Link>
+                      <Link href={`/suburb-guides/${g.slug}`}>{g.slug.replace(/-/g, ' ')}</Link>
                       {g.states?.nodes?.[0] && <span className="muted">{g.states.nodes[0].name}</span>}
                     </li>
                   ))}
@@ -108,7 +108,7 @@ export default async function StatePage({ params }: Props) {
                 <ul className="sidebar-list">
                   {featuredAgencies.map((a) => (
                     <li key={a.id}>
-                      <Link href={a.uri}>{a.slug.replace(/-/g, ' ')}</Link>
+                      <Link href={`/agencies/${a.slug}`}>{a.slug.replace(/-/g, ' ')}</Link>
                     </li>
                   ))}
                 </ul>
@@ -122,7 +122,7 @@ export default async function StatePage({ params }: Props) {
                 <ul className="sidebar-list">
                   {featuredAgents.map((a) => (
                     <li key={a.id}>
-                      <Link href={a.uri}>{a.slug.replace(/-/g, ' ')}</Link>
+                      <Link href={`/agents/${a.slug}`}>{a.slug.replace(/-/g, ' ')}</Link>
                       {a.agentProfile?.agency?.nodes?.[0] && (
                         <span className="muted">{a.agentProfile.agency.nodes[0].slug.replace(/-/g, ' ')}</span>
                       )}

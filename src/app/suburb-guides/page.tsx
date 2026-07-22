@@ -19,7 +19,7 @@ export default async function SuburbGuidesPage() {
         <h1 className="page-title">Suburb Guides</h1>
         <div className="card-grid">
           {guides.map((g) => (
-            <Link key={g.id} href={g.uri} className="card">
+            <Link key={g.id} href={`/suburb-guides/${g.slug}`} className="card">
               {g.featuredImage?.node?.sourceUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={g.featuredImage.node.sourceUrl} alt={g.featuredImage.node.altText} />

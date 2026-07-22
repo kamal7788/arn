@@ -54,7 +54,7 @@ export default async function AgencyPage({ params }: Props) {
                 <ul>
                   {profile.agents.nodes.map((agent: { slug: string; uri: string }) => (
                     <li key={agent.slug}>
-                      <Link href={agent.uri}>{agent.slug.replace(/-/g, ' ')}</Link>
+                      <Link href={`/agents/${agent.slug}`}>{agent.slug.replace(/-/g, ' ')}</Link>
                     </li>
                   ))}
                 </ul>

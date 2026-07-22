@@ -34,7 +34,7 @@ export default async function AssetClassPage({ params }: Props) {
         <h1 className="page-title">{term?.name ?? label}</h1>
         <div className="card-grid">
           {posts.map((p) => (
-            <Link key={p.id} href={p.uri} className="card">
+            <Link key={p.id} href={`/news/${p.slug}`} className="card">
               <div className="card-body">
                 <h3>{p.title}</h3>
                 <p className="muted">{formatDate(p.date)}</p>

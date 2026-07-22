@@ -20,9 +20,11 @@ export default async function Header() {
   try {
     const { data } = await apolloClient.query({
       query: GET_CATEGORIES,
-      variables: { first: 20, exclude: ['1'] },
+      variables: { first: 20 },
     });
-    categories = (data?.categories?.nodes ?? []) as TaxonomyTerm[];
+    categories = ((data?.categories?.nodes ?? []) as TaxonomyTerm[]).filter(
+      (c) => c.slug !== 'uncategorized'
+    );
   } catch {
     categories = [];
   }

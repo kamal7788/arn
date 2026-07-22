@@ -30,7 +30,7 @@ export default async function SuburbPage({ params }: Props) {
         <h1 className="page-title">{term?.name ?? label}</h1>
         <div className="card-grid">
           {guides.map((g) => (
-            <Link key={g.id} href={g.uri} className="card">
+            <Link key={g.id} href={`/suburb-guides/${g.slug}`} className="card">
               <div className="card-body">
                 <h3>{g.slug.replace(/-/g, ' ')}</h3>
                 {g.states?.nodes?.[0] && <p className="muted">{g.states.nodes[0].name}</p>}
