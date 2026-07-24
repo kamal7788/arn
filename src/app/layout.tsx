@@ -56,10 +56,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     <Link key={s.slug} href={`/state/${s.slug}`}>{s.name}</Link>
                   ))}
                 </div>
-                <div className="footer-section">
-                  <strong>More</strong>
-                  <Link href="/search">Search</Link>
-                </div>
               </div>
               <div className="footer-bottom">
                 &copy; {new Date().getFullYear()} Aus Real Estate News. All rights reserved.

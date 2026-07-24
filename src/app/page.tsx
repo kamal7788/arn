@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { apolloClient } from '@/lib/apollo-client';
 import { GET_POSTS, GET_CATEGORIES } from '@/lib/graphql/queries';
+import SidebarWidgets from '@/components/SidebarWidgets';
 import type { Post, TaxonomyTerm } from '@/lib/types';
 
 export const metadata: Metadata = {
@@ -88,16 +89,28 @@ function CategorySection({ category, posts }: { category: TaxonomyTerm; posts: P
   );
 }
 
-export default async function HomePage() {
+export default async function HomePage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { q } = await searchParams;
   const [{ data: postsData }, { data: catsData }] = await Promise.all([
     apolloClient.query({ query: GET_POSTS, variables: { first: 30 } }),
     apolloClient.query({ query: GET_CATEGORIES, variables: { first: 20 } }),
   ]);
 
-  const posts = (postsData?.posts?.nodes ?? []) as Post[];
+  let posts = (postsData?.posts?.nodes ?? []) as Post[];
   const allCats = ((catsData?.categories?.nodes ?? []) as TaxonomyTerm[]).filter(
     (c) => c.slug !== 'uncategorized'
   );
+
+  // Filter by search query if present
+  const isSearching = !!q?.trim();
+  if (isSearching) {
+    const needle = q!.trim().toLowerCase();
+    posts = posts.filter(
+      (p) =>
+        p.title.toLowerCase().includes(needle) ||
+        stripHtml(p.excerpt || '').toLowerCase().includes(needle)
+    );
+  }
 
   const hero = posts[0];
   const rest = posts.slice(1);
@@ -106,44 +119,69 @@ export default async function HomePage() {
   if (posts.length === 0) {
     return (
       <div className="empty-state">
-        <h2>No articles yet</h2>
-        <p>Check back soon for the latest Australian real estate news.</p>
+        {isSearching ? (
+          <>
+            <h2>No results for &ldquo;{q}&rdquo;</h2>
+            <p>Try different keywords or browse by category.</p>
+          </>
+        ) : (
+          <>
+            <h2>No articles yet</h2>
+            <p>Check back soon for the latest Australian real estate news.</p>
+          </>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="homepage container">
-      {hero && <HeroArticle post={hero} />}
-      {groups.map(({ category, posts: catPosts }) => (
-        <CategorySection key={category.slug} category={category} posts={catPosts} />
-      ))}
-      {groups.length === 0 && rest.length > 0 && (
-        <section className="hp-section">
-          <div className="hp-section-header">
-            <h2 className="hp-section-name">Latest News</h2>
-          </div>
-          <div className="hp-section-grid">
-            {rest.slice(0, 4).map((post, i) => (
-              <Link key={post.id} href={`/news/${post.slug}`} className={`hp-card ${i === 0 ? 'hp-card-featured' : ''}`}>
-                <div className="hp-card-image">
-                  {post.featuredImage?.node?.sourceUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={post.featuredImage.node.sourceUrl} alt={post.featuredImage.node.altText || post.title} />
-                  ) : (
-                    <div className="hp-card-fallback">AR</div>
-                  )}
-                </div>
-                <div className="hp-card-body">
-                  <h3 className="hp-card-title">{post.title}</h3>
-                  {i === 0 && <p className="hp-card-excerpt">{stripHtml(post.excerpt)}</p>}
-                  <span className="hp-date">{formatDate(post.date)}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
+    <div className="container">
+      {isSearching && (
+        <div className="search-page-header">
+          <h1>Search</h1>
+          <p className="muted">
+            {posts.length} {posts.length === 1 ? 'result' : 'results'} for &ldquo;<strong>{q}</strong>&rdquo; &mdash;{' '}
+            <Link href="/" style={{ textDecoration: 'underline' }}>Clear search</Link>
+          </p>
+        </div>
       )}
+      <div className="homepage-layout">
+        <div className="homepage-main">
+          {hero && <HeroArticle post={hero} />}
+          <div className="hp-sections">
+            {groups.map(({ category, posts: catPosts }) => (
+              <CategorySection key={category.slug} category={category} posts={catPosts} />
+            ))}
+            {groups.length === 0 && rest.length > 0 && (
+              <section className="hp-section">
+                <div className="hp-section-header">
+                  <h2 className="hp-section-name">Latest News</h2>
+                </div>
+                <div className="hp-section-grid">
+                  {rest.slice(0, 4).map((post, i) => (
+                    <Link key={post.id} href={`/news/${post.slug}`} className={`hp-card ${i === 0 ? 'hp-card-featured' : ''}`}>
+                      <div className="hp-card-image">
+                        {post.featuredImage?.node?.sourceUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={post.featuredImage.node.sourceUrl} alt={post.featuredImage.node.altText || post.title} />
+                        ) : (
+                          <div className="hp-card-fallback">AR</div>
+                        )}
+                      </div>
+                      <div className="hp-card-body">
+                        <h3 className="hp-card-title">{post.title}</h3>
+                        {i === 0 && <p className="hp-card-excerpt">{stripHtml(post.excerpt)}</p>}
+                        <span className="hp-date">{formatDate(post.date)}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        </div>
+        <SidebarWidgets />
+      </div>
     </div>
   );
 }
