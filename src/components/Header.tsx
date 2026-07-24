@@ -31,18 +31,21 @@ export default async function Header() {
 
   return (
     <header className="header">
-      <div className="container header-inner">
+      <div className="container header-top">
         <Link href="/" className="logo">
-          <span className="logo-mark">AR</span>
-          <span className="logo-text">Aus Real Estate News</span>
+          <span className="logo-dot">●</span> AR
         </Link>
 
-        <nav className="main-nav" role="navigation" aria-label="Main navigation">
-          {categories.map((cat) => (
-            <Link key={cat.slug} href={`/category/${cat.slug}`}>
-              {cat.name}
-            </Link>
-          ))}
+        <SearchBar />
+
+        <div className="header-right">
+          <Link href="/agencies">Agencies</Link>
+          <Link href="/agents">Agents</Link>
+        </div>
+      </div>
+
+      <nav className="category-nav" role="navigation" aria-label="Main navigation">
+        <div className="category-nav-inner">
           <div className="nav-dropdown">
             <span className="nav-dropdown-trigger">
               States
@@ -59,12 +62,13 @@ export default async function Header() {
               ))}
             </div>
           </div>
-        </nav>
-
-        <div className="header-actions">
-          <SearchBar />
+          {categories.map((cat) => (
+            <Link key={cat.slug} href={`/category/${cat.slug}`}>
+              {cat.name}
+            </Link>
+          ))}
         </div>
-      </div>
+      </nav>
     </header>
   );
 }

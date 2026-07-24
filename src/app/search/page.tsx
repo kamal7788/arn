@@ -45,9 +45,9 @@ export default async function SearchPage({ searchParams }: Props) {
   return (
     <>
       <div className="search-page-header">
-        <h1 style={{ fontSize: '2rem', fontFamily: 'var(--font-heading)' }}>Search</h1>
+        <h1 style={{ fontSize: '2rem', fontFamily: 'var(--font-serif)' }}>Search</h1>
         {q && (
-          <p style={{ color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
+          <p style={{ color: 'var(--ink-secondary)', marginTop: '0.5rem' }}>
             {results.length} {results.length === 1 ? 'result' : 'results'} for &ldquo;<strong>{q}</strong>&rdquo;
           </p>
         )}

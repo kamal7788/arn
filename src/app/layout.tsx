@@ -31,43 +31,42 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en-AU">
       <body>
-        <Header />
-        <main className="main">
-          <div className="container">{children}</div>
-        </main>
-        <footer className="footer">
-          <div className="container">
-            <div className="footer-grid">
-              <div className="footer-section">
-                <strong>Aus Real Estate News</strong>
-                <p>Australian real estate intelligence — news, suburb guides, and agency directory.</p>
+        <div className="sheet">
+          <Header />
+          <main className="main">
+            {children}
+          </main>
+          <footer className="footer">
+            <div className="container">
+              <div className="footer-grid">
+                <div className="footer-section">
+                  <strong>Aus Real Estate News</strong>
+                  <p>Australian real estate intelligence — news, suburb guides, and agency directory.</p>
+                </div>
+                <div className="footer-section">
+                  <strong>Content</strong>
+                  <Link href="/">News</Link>
+                  <Link href="/suburb-guides">Suburb Guides</Link>
+                  <Link href="/agencies">Agencies</Link>
+                  <Link href="/agents">Agents</Link>
+                </div>
+                <div className="footer-section">
+                  <strong>States</strong>
+                  {STATE_LIST.map((s) => (
+                    <Link key={s.slug} href={`/state/${s.slug}`}>{s.name}</Link>
+                  ))}
+                </div>
+                <div className="footer-section">
+                  <strong>More</strong>
+                  <Link href="/search">Search</Link>
+                </div>
               </div>
-              <div className="footer-section">
-                <strong>Explore</strong>
-                <Link href="/">News</Link>
-                <Link href="/suburb-guides">Suburb Guides</Link>
-                <Link href="/agencies">Agencies</Link>
-                <Link href="/agents">Agents</Link>
-              </div>
-              <div className="footer-section">
-                <strong>States</strong>
-                {STATE_LIST.map((s) => (
-                  <Link key={s.slug} href={`/state/${s.slug}`}>{s.name}</Link>
-                ))}
-              </div>
-              <div className="footer-section">
-                <strong>More</strong>
-                <Link href="/suburb-guides">Suburb Guides</Link>
-                <Link href="/agencies">Agencies</Link>
-                <Link href="/agents">Agents</Link>
-                <Link href="/search">Search</Link>
+              <div className="footer-bottom">
+                &copy; {new Date().getFullYear()} Aus Real Estate News. All rights reserved.
               </div>
             </div>
-            <div className="footer-bottom">
-              &copy; {new Date().getFullYear()} Aus Real Estate News. All rights reserved.
-            </div>
-          </div>
-        </footer>
+          </footer>
+        </div>
       </body>
     </html>
   );
