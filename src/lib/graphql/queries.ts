@@ -240,7 +240,6 @@ export const GET_AGENCY = gql`
       uri
       date
       content
-      excerpt
       featuredImage {
         node {
           sourceUrl
@@ -330,7 +329,6 @@ export const GET_AGENT = gql`
       uri
       date
       content
-      excerpt
       featuredImage {
         node {
           sourceUrl
