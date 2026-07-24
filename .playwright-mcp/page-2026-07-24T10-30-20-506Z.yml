@@ -1,0 +1,105 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link "● AR" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e6]: ●
+          - text: AR
+        - textbox "Search news..." [ref=e11]
+      - navigation "Main navigation" [ref=e12]:
+        - generic [ref=e13]:
+          - link "Development" [ref=e14] [cursor=pointer]:
+            - /url: /category/development
+          - link "Finance" [ref=e15] [cursor=pointer]:
+            - /url: /category/finance
+          - link "Market" [ref=e16] [cursor=pointer]:
+            - /url: /category/market
+          - link "Policy" [ref=e17] [cursor=pointer]:
+            - /url: /category/policy
+          - link "Technology" [ref=e18] [cursor=pointer]:
+            - /url: /category/technology
+          - generic [ref=e19]:
+            - generic [ref=e20] [cursor=pointer]: States
+            - generic [ref=e75]:
+              - link "All States" [ref=e76] [cursor=pointer]:
+                - /url: /state
+              - link "NSW" [ref=e77] [cursor=pointer]:
+                - /url: /state/nsw
+              - link "VIC" [ref=e78] [cursor=pointer]:
+                - /url: /state/vic
+              - link "QLD" [ref=e79] [cursor=pointer]:
+                - /url: /state/qld
+              - link "WA" [ref=e80] [cursor=pointer]:
+                - /url: /state/wa
+              - link "SA" [ref=e81] [cursor=pointer]:
+                - /url: /state/sa
+              - link "TAS" [ref=e82] [cursor=pointer]:
+                - /url: /state/tas
+              - link "ACT" [ref=e83] [cursor=pointer]:
+                - /url: /state/act
+              - link "NT" [ref=e84] [cursor=pointer]:
+                - /url: /state/nt
+    - main [ref=e23]:
+      - generic [ref=e25]:
+        - link "AR Policy dummy dummy is dummy this is point less hello world. 20 July 2026" [ref=e27] [cursor=pointer]:
+          - /url: /news/dummy
+          - generic [ref=e28]: AR
+          - generic [ref=e30]:
+            - generic [ref=e31]: Policy
+            - heading "dummy" [level=1] [ref=e32]
+            - paragraph [ref=e33]: dummy is dummy this is point less hello world.
+            - generic [ref=e34]: 20 July 2026
+        - complementary [ref=e35]:
+          - generic [ref=e36]:
+            - heading "Featured News" [level=3] [ref=e37]
+            - generic [ref=e41]:
+              - link "dummy" [ref=e42] [cursor=pointer]:
+                - /url: /news/dummy
+              - paragraph [ref=e43]: 20 July 2026
+            - link "View all news →" [ref=e44] [cursor=pointer]:
+              - /url: /
+          - generic [ref=e45]:
+            - heading "Agencies" [level=3] [ref=e46]
+            - list [ref=e47]:
+              - listitem [ref=e48]:
+                - link "dummy agency" [ref=e49] [cursor=pointer]:
+                  - /url: /agencies/dummy-agency
+            - link "View all agencies →" [ref=e50] [cursor=pointer]:
+              - /url: /agencies
+    - contentinfo [ref=e51]:
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - generic [ref=e54]:
+            - strong [ref=e55]: Aus Real Estate News
+            - paragraph [ref=e56]: Australian real estate intelligence — news, suburb guides, and agency directory.
+          - generic [ref=e57]:
+            - strong [ref=e58]: Content
+            - link "News" [ref=e59] [cursor=pointer]:
+              - /url: /
+            - link "Suburb Guides" [ref=e60] [cursor=pointer]:
+              - /url: /suburb-guides
+            - link "Agencies" [ref=e61] [cursor=pointer]:
+              - /url: /agencies
+            - link "Agents" [ref=e62] [cursor=pointer]:
+              - /url: /agents
+          - generic [ref=e63]:
+            - strong [ref=e64]: States
+            - link "NSW" [ref=e65] [cursor=pointer]:
+              - /url: /state/nsw
+            - link "VIC" [ref=e66] [cursor=pointer]:
+              - /url: /state/vic
+            - link "QLD" [ref=e67] [cursor=pointer]:
+              - /url: /state/qld
+            - link "WA" [ref=e68] [cursor=pointer]:
+              - /url: /state/wa
+            - link "SA" [ref=e69] [cursor=pointer]:
+              - /url: /state/sa
+            - link "TAS" [ref=e70] [cursor=pointer]:
+              - /url: /state/tas
+            - link "ACT" [ref=e71] [cursor=pointer]:
+              - /url: /state/act
+            - link "NT" [ref=e72] [cursor=pointer]:
+              - /url: /state/nt
+        - generic [ref=e73]: © 2026 Aus Real Estate News. All rights reserved.
+  - alert [ref=e74]

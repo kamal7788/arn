@@ -186,19 +186,22 @@ h4 { font-size: 1rem; }
 }
 
 /* ══════════════════════════════════════════════════════
-   CATEGORY NAV — Centered horizontal strip below header
+   CATEGORY NAV — Categories centered, States pinned right
    ══════════════════════════════════════════════════════ */
 .category-nav {
   border-bottom: 1px solid var(--rule);
   background: var(--sheet);
+  display: flex;
+  align-items: stretch;
+  height: var(--nav-h);
 }
 
 .category-nav-inner {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0;
-  height: var(--nav-h);
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -229,12 +232,13 @@ h4 { font-size: 1rem; }
   border-bottom-color: var(--ink);
 }
 
-/* Dropdown (States) */
+/* Dropdown (States) — click-based, outside scroll container */
 .nav-dropdown {
   position: relative;
-  height: 100%;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
+  border-left: 1px solid var(--rule);
 }
 
 .nav-dropdown-trigger {
@@ -242,44 +246,40 @@ h4 { font-size: 1rem; }
   align-items: center;
   gap: 0.3rem;
   height: 100%;
-  padding: 0 1.1rem;
+  padding: 0 1.25rem;
   font-size: 0.82rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--ink-secondary);
   cursor: pointer;
+  border: none;
   border-bottom: 2px solid transparent;
   transition: color 0.15s;
   background: none;
-  border-top: none;
-  border-left: none;
-  border-right: none;
   font-family: var(--font-sans);
 }
 
-.nav-dropdown-trigger:hover { color: var(--ink); }
+.nav-dropdown-trigger:hover,
+.nav-dropdown.open .nav-dropdown-trigger { color: var(--ink); }
 
 .nav-chevron {
   transition: transform 0.2s;
 }
-.nav-dropdown:hover .nav-chevron { transform: rotate(180deg); }
+.nav-dropdown.open .nav-chevron { transform: rotate(180deg); }
 
 .nav-dropdown-menu {
-  display: none;
   position: absolute;
-  top: calc(100% - 1px);
-  left: 0;
+  top: 100%;
+  right: 0;
   background: var(--sheet);
   border: 1px solid var(--rule);
   border-radius: 0 0 var(--radius) var(--radius);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
   min-width: 180px;
   padding: 0.4rem 0;
-  z-index: 200;
+  z-index: 300;
 }
-
-.nav-dropdown:hover .nav-dropdown-menu { display: block; }
 
 .nav-dropdown-item {
   display: block;
