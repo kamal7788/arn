@@ -36,3 +36,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright artifacts
+.playwright-mcp/
+*.playwright-mcp*
+dropdown-hover.png
+homepage-snapshot.md
